@@ -7,7 +7,7 @@
 | RF-01 | El bus envía periódicamente su ubicación geográfica al sistema mediante GPS. | Bus (GPS) | Alta |
 | RF-02 | El pasajero consulta la ubicación actual de los buses sobre un mapa. | Pasajero | Alta |
 | RF-03 | El pasajero consulta el tiempo estimado de llegada de los buses a un paradero. | Pasajero | Alta |
-| RF-04 | El sistema identifica situaciones de desvío o congestión que afectan las rutas. | Operador | Alta |
+| RF-04 | El operador consulta los desvíos o situaciones de congestión detectados en las rutas. | Operador | Alta |
 | RF-05 | El pasajero recibe alertas sobre desvíos o congestión que afecten el servicio. | Pasajero | Alta |
 | RF-06 | El operador supervisa la ubicación y el estado de los buses para dar seguimiento al servicio. | Operador | Media |
 
@@ -30,7 +30,7 @@
 | R-01 | Plazo | El MVP debe estar en producción en un plazo máximo de 1 mes. |
 | R-02 | Equipo | El equipo está conformado por 2 integrantes con conocimientos en Python, Java, MySQL y Git/GitHub. |
 | R-03 | Presupuesto | El proyecto dispone de un presupuesto bajo, por lo que se priorizarán tecnologías de código abierto y servicios gratuitos o de bajo costo. |
-| R-04 | Tecnología | La solución debe priorizar tecnologías conocidas por el equipo y evitar una infraestructura excesivamente compleja que dificulte su desarrollo y operación dentro del plazo establecido. |
+| R-04 | Integración | El sistema debe utilizar los datos de ubicación proporcionados por los dispositivos GPS de los buses como fuente para el seguimiento y cálculo de los tiempos estimados de llegada. |
 
 ## 4. Escenarios de atributos de calidad
 
