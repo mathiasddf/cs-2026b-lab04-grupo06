@@ -26,7 +26,9 @@ Usaremos **Server-Sent Events (SSE)** para enviar al cliente las actualizaciones
 
 Se elige SSE porque RutaSIT necesita principalmente distribuir información desde el servidor hacia los pasajeros. Permite mantener una conexión para entregar nuevos datos sin realizar consultas HTTP periódicas y evita introducir comunicación bidireccional permanente cuando el MVP no la requiere.
 
-Las operaciones iniciadas por el usuario, como las consultas convencionales a la aplicación, continuarán realizándose mediante HTTP. La decisión podrá revisarse si en futuras versiones aparecen requisitos que necesiten intercambio bidireccional continuo entre cliente y servidor.
+Las operaciones iniciadas por el usuario, como las consultas convencionales a la aplicación, continuarán realizándose mediante HTTP. SSE se utilizará únicamente para el flujo de actualizaciones desde el servidor hacia el pasajero.
+
+La decisión deberá reevaluarse si futuras funcionalidades requieren intercambio bidireccional continuo entre cliente y servidor, ya que en ese escenario una alternativa como WebSocket podría ajustarse mejor al nuevo patrón de comunicación.
 
 ## Consecuencias
 
