@@ -1,0 +1,56 @@
+@startuml
+title RutaSIT Arequipa - Alternativa orientada a eventos
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor Pasajero
+actor Operador
+component "Bus / GPS" as GPS
+
+rectangle "RutaSIT - Arquitectura orientada a eventos" {
+
+    component "API / Recepción GPS" as API
+
+    queue "Broker de eventos" as BROKER
+
+    component "Servicio de\nUbicaciones" as UB
+    component "Servicio de\nRutas y buses" as RUT
+    component "Servicio de\nCálculo de ETA" as ETA
+    component "Servicio de\nAlertas" as ALERT
+    component "Servicio de\nConsultas" as CONS
+
+    database "Base de datos" as DB
+}
+
+cloud "Servicio externo\nde mapas" as MAP
+
+GPS --> API : posición GPS
+API --> BROKER : publica posición
+
+BROKER --> UB : evento de posición
+BROKER --> ETA : evento de posición
+BROKER --> ALERT : evento de posición
+
+UB --> DB
+RUT --> DB
+ETA --> DB
+ALERT --> DB
+CONS --> DB
+
+ETA --> BROKER : publica ETA
+ALERT --> BROKER : publica alerta
+
+Pasajero --> CONS : ubicación / ETA
+Operador --> CONS : supervisión
+
+CONS --> MAP : información geográfica
+
+note bottom of BROKER
+Esta alternativa obtuvo 4.00/5 en la matriz de decisión.
+Ofrece mayor desacoplamiento y escalabilidad para procesar eventos.
+Se descartó para el MVP por la complejidad adicional de operar un broker
+con un equipo de 2 integrantes y un plazo de desarrollo de 1 mes.
+end note
+
+@enduml
