@@ -1,55 +1,59 @@
-flowchart LR
+flowchart TB
 
     %% Actores externos
-    Pasajero["Pasajero"]
-    Operador["Operador"]
-    GPS["Bus / GPS"]
+    P["Pasajero"]
+    O["Operador"]
+    G["Bus / GPS"]
 
-    %% Sistema principal
-    subgraph RutaSIT["RutaSIT Arequipa - Monolito modular"]
+    subgraph APP["RutaSIT Arequipa - Monolito modular "]
 
-        API["API / Controladores"]
+        API["Capa de presentacion / API<br/>Consultas y recepcion GPS"]
 
-        subgraph Modulos["Modulos internos"]
-            Ubicaciones["Modulo de Ubicaciones"]
-            Rutas["Modulo de Rutas y Buses"]
-            ETA["Modulo de calculo de ETA"]
-            Alertas["Modulo de Alertas"]
-            Consultas["Modulo de Consultas"]
-        end
+        U["Ubicaciones"]
+        R["Rutas y buses"]
+        E["Calculo de ETA"]
+        A["Alertas"]
+        C["Consultas"]
 
-        BD[("Base de datos")]
+        INF["Capa de infraestructura:<br/>persistencia e integraciones externas"]
+
+        API --> U
+        API --> R
+        API --> C
+
+        U --> E
+        R --> E
+
+        U --> A
+        R --> A
+
+        E --> C
+        A --> C
+
+        U --> INF
+        R --> INF
+        E --> INF
+        A --> INF
+        C --> INF
     end
 
-    %% Servicio externo
-    Mapas["Servicio externo de mapas"]
+    DB[("Base de datos")]
+    MAP["Servicio externo<br/>de mapas"]
 
-    %% Actores hacia el sistema
-    Pasajero -->|"Consulta ubicacion y ETA"| API
-    Operador -->|"Supervision e incidencias"| API
-    GPS -->|"Posicion GPS"| API
+    P --> API
+    O --> API
+    G --> API
 
-    %% API hacia modulos
-    API --> Consultas
-    API --> Ubicaciones
-    API --> Rutas
+    INF --> DB
+    INF --> MAP
 
-    %% Procesamiento principal
-    Ubicaciones -->|"Posiciones"| ETA
-    Rutas -->|"Rutas y paraderos"| ETA
+    %% Estilos
+    classDef actor fill:#FDECEC,stroke:#D9534F,color:#000;
+    classDef module fill:#EAF6EA,stroke:#5A9E5A,color:#000;
+    classDef layer fill:#EEE8FF,stroke:#7667B8,color:#000;
+    classDef external fill:#F7F7F7,stroke:#777,color:#000,stroke-dasharray:4 3;
 
-    Ubicaciones -->|"Estado de buses"| Alertas
-    Rutas -->|"Informacion de rutas"| Alertas
-
-    %% Consulta de resultados
-    Consultas --> ETA
-    Consultas --> Alertas
-
-    %% Persistencia
-    Ubicaciones --> BD
-    Rutas --> BD
-    ETA --> BD
-    Alertas --> BD
-
-    %% Integracion externa
-    Consultas -->|"Visualizacion geografica"| Mapas
+    class P,O,G actor;
+    class U,R,E,A,C module;
+    class API,INF layer;
+    class MAP external;
