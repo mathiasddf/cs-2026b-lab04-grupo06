@@ -1,0 +1,55 @@
+flowchart LR
+
+    %% Actores externos
+    Pasajero["Pasajero"]
+    Operador["Operador"]
+    GPS["Bus / GPS"]
+
+    %% Sistema principal
+    subgraph RutaSIT["RutaSIT Arequipa - Monolito modular"]
+
+        API["API / Controladores"]
+
+        subgraph Modulos["Modulos internos"]
+            Ubicaciones["Modulo de Ubicaciones"]
+            Rutas["Modulo de Rutas y Buses"]
+            ETA["Modulo de calculo de ETA"]
+            Alertas["Modulo de Alertas"]
+            Consultas["Modulo de Consultas"]
+        end
+
+        BD[("Base de datos")]
+    end
+
+    %% Servicio externo
+    Mapas["Servicio externo de mapas"]
+
+    %% Actores hacia el sistema
+    Pasajero -->|"Consulta ubicacion y ETA"| API
+    Operador -->|"Supervision e incidencias"| API
+    GPS -->|"Posicion GPS"| API
+
+    %% API hacia modulos
+    API --> Consultas
+    API --> Ubicaciones
+    API --> Rutas
+
+    %% Procesamiento principal
+    Ubicaciones -->|"Posiciones"| ETA
+    Rutas -->|"Rutas y paraderos"| ETA
+
+    Ubicaciones -->|"Estado de buses"| Alertas
+    Rutas -->|"Informacion de rutas"| Alertas
+
+    %% Consulta de resultados
+    Consultas --> ETA
+    Consultas --> Alertas
+
+    %% Persistencia
+    Ubicaciones --> BD
+    Rutas --> BD
+    ETA --> BD
+    Alertas --> BD
+
+    %% Integracion externa
+    Consultas -->|"Visualizacion geografica"| Mapas
