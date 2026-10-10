@@ -1,0 +1,44 @@
+@startuml actividades-desvio
+skinparam DefaultFontName Arial
+skinparam ActivityBackgroundColor #EEF2F8
+skinparam ActivityBorderColor #1A3A5C
+
+title RutaSIT Arequipa — Diagrama de Actividades (Detección y Aviso de Desvío)
+
+|Dispositivo GPS del Bus|
+start
+:Envía trama de posición GPS actual (lat, lon, velocidad);
+
+|Servicio de Ubicaciones|
+:Recibe y procesa trama GPS del bus;
+:Compara posición con la ruta asignada en el repositorio;
+
+if (¿La posición se aleja más del umbral permitido?) then (sí)
+  
+  fork
+    :Actualiza el estado del viaje a "DESVIADO";
+    :Registra la incidencia en el sistema;
+  fork again
+    :Calcula el impacto en el tiempo estimado (ETA);
+    :Genera reporte de alerta para paraderos posteriores;
+  end fork
+
+  if (¿El pasajero tiene alertas activas?) then (sí)
+    |Módulo de Notificaciones|
+    :Prepara notificación push de desvío;
+    :Envía aviso asíncrono al smartphone del pasajero;
+    |Pasajero|
+    :Recibe notificación de desvío en tiempo real;
+  else (no)
+    |Servicio de Ubicaciones|
+    :Registra evento sin notificación push;
+  endif
+
+else (no)
+  |Servicio de Ubicaciones|
+  :Mantiene estado "EN_RUTA" de la unidad;
+  :Actualiza posición en el mapa en tiempo real;
+endif
+
+stop
+@enduml
