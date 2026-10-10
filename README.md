@@ -110,3 +110,16 @@ stateDiagram-v2
         verá una advertencia al
         consultar el ETA.
     end note
+
+### Enlaces a Diagramas y Documentación de Diseño
+* **E1 (Clases):** [Ver Clases](docs/design/classes_ubicaciones.puml)
+* **E2 (Secuencia):** [Ver Secuencia](docs/design/secuencia-consulta-eta.mmd)
+* **E3 (Estados):** [Ver Estados](docs/design/estados-viaje.mmd)
+* **E4 (Actividades):** [Ver Actividades](docs/design/actividad-desvio.mmd)
+* **E5 (Paquetes):** [Ver Paquetes](docs/design/packages_ubicaciones.puml)
+* **E6 (Round-trip):** [Reporte de Ingeniería Inversa](docs/design/round-trip.md)
+* **E7 (Consistencia y Bitácora):** [Matriz de Consistencia](docs/design/consistencia.md) | [Bitácora IA](docs/design/bitacora-ia.md)
+
+
+
+    
