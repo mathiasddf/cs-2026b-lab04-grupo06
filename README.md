@@ -91,11 +91,22 @@ La IA permitió explorar y comparar alternativas arquitectónicas con mayor rapi
 Este módulo documenta el modelado de diseño detallado para el sistema de rastreo GPS y cálculo de ETA de *RutaSIT Arequipa*.
 
 ### Diagrama de Estados (EstadosBus)
-```mermaid
+@startuml
 stateDiagram-v2
-    [*] --> EN_ESPERA : Bus registrado
-    EN_ESPERA --> EN_RUTA : Iniciar viaje / Asignar ruta
-    EN_RUTA --> DESVIADO : Alerta de desvío GPS
-    DESVIADO --> EN_RUTA : Recuperación de ruta
-    EN_RUTA --> FINALIZADO : Fin de recorrido
+    [*] --> PROGRAMADO : crearViaje()
+    PROGRAMADO --> EN_RUTA : actualizarUbicacion() [velocidad > 0]
+    EN_RUTA --> DESVIADO : actualizarUbicacion() [fuera de ruta permitida]
+    EN_RUTA --> DETENIDO : actualizarUbicacion() [sin señal por > 60s]
+    DESVIADO --> EN_RUTA : actualizarUbicacion() [retorna a ruta]
+    DETENIDO --> EN_RUTA : actualizarUbicacion() [recupera señal]
+    EN_RUTA --> FINALIZADO : finalizarViaje()
+    DESVIADO --> FINALIZADO : finalizarViaje()
+    DETENIDO --> FINALIZADO : finalizarViaje()
     FINALIZADO --> [*]
+
+    note right of DESVIADO
+        Criterio 2: El pasajero
+        verá una advertencia al 
+        consultar el ETA.
+    end note
+@enduml
