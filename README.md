@@ -85,20 +85,21 @@ flowchart TB
 
 La IA permitió explorar y comparar alternativas arquitectónicas con mayor rapidez, pero sus propuestas fueron tratadas como recomendaciones y no como decisiones definitivas. Durante el desarrollo se contrastaron sus respuestas con los requisitos, atributos de calidad y restricciones definidos para RutaSIT. Algunas propuestas fueron corregidas o rechazadas cuando añadían complejidad innecesaria o no representaban adecuadamente la arquitectura del caso. También se verificaron cálculos, puntajes de la matriz y la coherencia entre los ADR y los diagramas. El proceso mostró que la IA es útil para ampliar las opciones de análisis y detectar posibles riesgos. Sin embargo, sus respuestas requieren validación porque pueden asumir condiciones que no están especificadas en el problema. La decisión final sobre cada elemento arquitectónico permaneció bajo responsabilidad del equipo.
 
-
-## Diseño UML (Lab 05)
+## Lab 05: Diseño y Modelado de Software
 
 Este módulo documenta el modelado de diseño detallado para el sistema de rastreo GPS y cálculo de ETA de *RutaSIT Arequipa*.
 
 ### Diagrama de Estados (EstadosBus)
-@startuml
+```mermaid
 stateDiagram-v2
     [*] --> PROGRAMADO : crearViaje()
+    
     PROGRAMADO --> EN_RUTA : actualizarUbicacion() [velocidad > 0]
     EN_RUTA --> DESVIADO : actualizarUbicacion() [fuera de ruta permitida]
     EN_RUTA --> DETENIDO : actualizarUbicacion() [sin señal por > 60s]
     DESVIADO --> EN_RUTA : actualizarUbicacion() [retorna a ruta]
     DETENIDO --> EN_RUTA : actualizarUbicacion() [recupera señal]
+    
     EN_RUTA --> FINALIZADO : finalizarViaje()
     DESVIADO --> FINALIZADO : finalizarViaje()
     DETENIDO --> FINALIZADO : finalizarViaje()
@@ -106,7 +107,6 @@ stateDiagram-v2
 
     note right of DESVIADO
         Criterio 2: El pasajero
-        verá una advertencia al 
+        verá una advertencia al
         consultar el ETA.
     end note
-@enduml
