@@ -1,0 +1,87 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam class BackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+
+title RutaSIT Arequipa — Módulos de Ubicaciones, Rutas y ETA (Diseño)
+
+class Pasajero {
+  - id: UUID
+  - celular: String
+  + consultarETA(paraderoId: UUID): int
+}
+
+class Bus {
+  - id: UUID
+  - placa: String
+  - capacidad: int
+  - estado: EstadoBus
+}
+
+enum EstadoBus {
+  EN_RUTA
+  DESVIADO
+  DETENIDO
+  FORA_DE_SERVICIO
+}
+
+class PosicionGPS {
+  - latitud: Double
+  - longitud: Double
+  - velocidad: Double
+  - timestamp: DateTime
+}
+
+class Paradero {
+  - id: UUID
+  - nombre: String
+  - latitud: Double
+  - longitud: Double
+}
+
+class Ruta {
+  - id: UUID
+  - codigo: String
+  - origen: String
+  - destino: String
+}
+
+class Viaje {
+  - id: UUID
+  - horaInicio: DateTime
+  - etaCalculadoSegundos: int
+  + actualizarUbicacion(pos: PosicionGPS): void
+  + calcularETA(paraderoTarget: Paradero): int
+}
+
+class ServicioUbicaciones <<servicio>> {
+  + procesarPosicionGPS(busId: UUID, pos: PosicionGPS): Viaje
+}
+
+interface ServicioMapasExterno <<puerto>> {
+  + obtenerMatrizDistancias(origen: PosicionGPS, destino: Paradero): int
+}
+
+class LeafletMapAdapter <<adaptador>> {
+  + obtenerMatrizDistancias(origen: PosicionGPS, destino: Paradero): int
+}
+
+interface RepositorioViajes <<puerto>> {
+  + buscarPorBus(busId: UUID): Viaje
+  + guardar(viaje: Viaje): void
+}
+
+Pasajero "0..*" --> "1" Paradero : consulta >
+Bus "1" *-- "0..*" PosicionGPS : registra
+Bus "1" -- "0..*" Viaje : realiza
+Ruta "1..*" o-- "1..*" Paradero : contiene
+Viaje "0..*" --> "1" Ruta : asignado
+Viaje --> EstadoBus
+
+ServicioUbicaciones ..> Viaje
+ServicioUbicaciones ..> RepositorioViajes
+ServicioUbicaciones ..> ServicioMapasExterno
+ServicioMapasExterno <|.. LeafletMapAdapter
+@enduml
