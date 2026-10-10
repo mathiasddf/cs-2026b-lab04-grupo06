@@ -1,0 +1,7 @@
+@startuml packages_ubicaciones
+set namespaceSeparator none
+package "ubicaciones" as ubicaciones {
+}
+package "ubicaciones.dominio" as ubicaciones.dominio {
+}
+@enduml
