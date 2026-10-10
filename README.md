@@ -110,6 +110,7 @@ stateDiagram-v2
         verá una advertencia al
         consultar el ETA.
     end note
+```
 
 ### Enlaces a Diagramas y Documentación de Diseño
 * **E1 (Clases):** [Ver Clases](docs/design/classes_ubicaciones.puml)
