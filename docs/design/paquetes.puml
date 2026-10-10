@@ -1,0 +1,43 @@
+@startuml
+skinparam DefaultFontName Arial
+skinparam PackageBackgroundColor #F8FAFC
+skinparam PackageBorderColor #1A3A5C
+
+title RutaSIT Arequipa — Diagrama de Paquetes (Monolito Modular)
+
+package "buses" {
+  class Bus
+}
+
+package "rutas" {
+  class Ruta
+  class Paradero
+}
+
+package "ubicaciones" {
+  class PosicionGPS
+  interface IServicioMapas
+}
+
+package "eta" {
+  class Viaje
+}
+
+package "compartido" {
+  class Coordenada
+}
+
+' Relaciones y dependencias etiquetadas (evitando ciclos - Regla C4)
+eta ..> ubicaciones : usa PosicionGPS
+ubicaciones ..> rutas : usa Ruta
+buses --> compartido : usa Coordenada
+rutas --> compartido : usa Coordenada
+ubicaciones --> IServicioMapas : implementa puerto
+
+note right of eta
+  **Regla de Dependencias (C4):**
+  - Arquitectura en capas modulares unidireccionales.
+  - El cálculo de ETA depende del módulo de ubicaciones.
+  - Las dependencias externas se abstraen mediante interfaces (puertos) para evitar acoplamiento rígido y ciclos.
+end note
+@enduml
