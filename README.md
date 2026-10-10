@@ -84,3 +84,18 @@ flowchart TB
 ## Reflexión sobre el uso de IA
 
 La IA permitió explorar y comparar alternativas arquitectónicas con mayor rapidez, pero sus propuestas fueron tratadas como recomendaciones y no como decisiones definitivas. Durante el desarrollo se contrastaron sus respuestas con los requisitos, atributos de calidad y restricciones definidos para RutaSIT. Algunas propuestas fueron corregidas o rechazadas cuando añadían complejidad innecesaria o no representaban adecuadamente la arquitectura del caso. También se verificaron cálculos, puntajes de la matriz y la coherencia entre los ADR y los diagramas. El proceso mostró que la IA es útil para ampliar las opciones de análisis y detectar posibles riesgos. Sin embargo, sus respuestas requieren validación porque pueden asumir condiciones que no están especificadas en el problema. La decisión final sobre cada elemento arquitectónico permaneció bajo responsabilidad del equipo.
+
+
+## Diseño UML (Lab 05)
+
+Este módulo documenta el modelado de diseño detallado para el sistema de rastreo GPS y cálculo de ETA de *RutaSIT Arequipa*.
+
+### Diagrama de Estados (EstadosBus)
+```mermaid
+stateDiagram-v2
+    [*] --> EN_ESPERA : Bus registrado
+    EN_ESPERA --> EN_RUTA : Iniciar viaje / Asignar ruta
+    EN_RUTA --> DESVIADO : Alerta de desvío GPS
+    DESVIADO --> EN_RUTA : Recuperación de ruta
+    EN_RUTA --> FINALIZADO : Fin de recorrido
+    FINALIZADO --> [*]
