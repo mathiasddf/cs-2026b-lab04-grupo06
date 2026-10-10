@@ -1,0 +1,48 @@
+@startuml secuencia-consultar-eta
+skinparam shadowing false
+autonumber
+
+actor Pasajero
+participant "PWA/App" as UI
+participant "ConsultaController" as C
+participant "ServicioConsultas" as S
+participant "RepositorioViajes" as R
+participant "Viaje" as V
+participant "Notificador" as N
+
+Pasajero -> UI: Selecciona paradero y consulta ETA
+UI -> C: GET /eta?busId=123&paraderoId=456
+C -> S: consultarETA(busId, paraderoId)
+S -> R: buscarViajeActivoPorBus(busId)
+R --> S: viajeActivo
+
+alt viaje encontrado y en ruta
+    S -> V: calcularETAHacia(paraderoId)
+    
+    loop por cada segmento de ruta pendiente
+        V -> V: sumarTiempoSegmento()
+    end
+    
+    V --> S: tiempoEstimado
+    S --> C: tiempoEstimado
+    C --> UI: 200 OK (ETA en minutos)
+    
+else viaje desviado o detenido
+    S -> V: calcularETAHacia(paraderoId)
+    V --> S: tiempoAjustado
+    
+    opt el usuario tiene notificaciones activas
+        S ->> N: enviarAlertaPush(pasajeroId, "Bus desviado")
+        note right of N: asíncrono\n(no bloquea la respuesta)
+    end
+    
+    S --> C: Alerta de anomalía + tiempoAjustado
+    C --> UI: 200 OK (Alerta y ETA ajustado)
+    
+else viaje no encontrado
+    S --> C: Error (No hay viaje activo)
+    C --> UI: 404 Not Found
+end
+
+UI --> Pasajero: Muestra el tiempo estimado en pantalla
+@enduml
