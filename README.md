@@ -121,6 +121,45 @@ stateDiagram-v2
 * **E6 (Round-trip):** [Reporte de Ingeniería Inversa](docs/design/round-trip.md)
 * **E7 (Consistencia):** [Matriz de Consistencia](docs/design/consistencia.md)
 
+## Arquitectura C4 (Lab 06)
 
+En el Laboratorio 06 se modeló la arquitectura completa de **RutaSIT Arequipa** bajo el enfoque de *Arquitectura como Código* utilizando **Structurizr DSL**, integrando las decisiones arquitectónicas del Laboratorio 04 (ADRs) y el diseño modular UML del Laboratorio 05.
+
+### Vista de Contexto (Mermaid C4)
+
+```mermaid
+C4Context
+    title Diagrama de Contexto del Sistema - RutaSIT Arequipa
+
+    Person(pasajero, "Pasajero", "Ciudadano de Arequipa que consulta la ubicación de los buses, el ETA a su paradero y recibe alertas.")
+    Person(operador, "Operador", "Personal del SIT que supervisa la flota en ruta y monitorea alertas de desvío o congestión.")
+
+    System(rutasit, "RutaSIT Arequipa", "Permite el seguimiento de buses en tiempo real, cálculo de tiempos estimados de llegada (ETA) y gestión de alertas.")
+
+    System_Ext(gpsBuses, "Dispositivos GPS de Buses", "Hardware embarcado en los 300 buses que transmite coordenadas y velocidad cada 10 segundos.")
+    System_Ext(mapas, "Servicio Externo de Mapas", "Proveedor cartográfico externo para visualización y cálculo de matrices de distancia.")
+
+    Rel(pasajero, rutasit, "Consulta ubicación de buses, ETA por paradero y recibe alertas de desvío")
+    Rel(operador, rutasit, "Supervisa el estado de la flota y consulta desvíos o congestión")
+    Rel(gpsBuses, rutasit, "Envía posición geográfica y velocidad cada 10 segundos", "HTTP/REST (JSON)")
+    Rel(rutasit, mapas, "Consulta cartografía y matrices de distancia entre coordenadas y paraderos", "HTTPS/JSON")
+```
+
+### Enlaces a las Vistas y Entregables C4
+
+* **Modelo fuente e inventario:**
+  * [Inventario de elementos C4 (`inventario.md`)](docs/architecture/c4/inventario.md)
+  * [Modelo único en Structurizr DSL (`workspace.dsl`)](docs/architecture/c4/workspace.dsl)
+* **Vistas generadas (Imágenes PNG):**
+  * [Nivel 1: Diagrama de Contexto](docs/architecture/c4/img/structurizr-Contexto.png)
+  * [Nivel 2: Diagrama de Contenedores](docs/architecture/c4/img/structurizr-Contenedores.png)
+  * [Nivel 3: Diagrama de Componentes (API Monolito Modular)](docs/architecture/c4/img/structurizr-Componentes.png)
+  * [Vista Dinámica: Consultar ETA (HU-03)](docs/architecture/c4/img/structurizr-ConsultarETA.png)
+  * [Vista de Despliegue: Entorno de Producción](docs/architecture/c4/img/structurizr-Despliegue.png)
+* **Análisis, Revisión y Comunicación:**
+  * [Comparación de vistas y herramientas (`comparacion.md`)](docs/architecture/c4/comparacion.md)
+  * [Revisión con checklist oficial C4 e IA (`revision-c4.md`)](docs/architecture/c4/revision-c4.md)
+  * [Explicación para público no técnico (`explicacion.md`)](docs/architecture/c4/explicacion.md)
+  * [Bitácora de IA del Laboratorio 06 (`bitacora-ia.md`)](docs/architecture/c4/bitacora-ia.md)
 
     
