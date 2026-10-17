@@ -1,0 +1,47 @@
+@startuml classes_ubicaciones
+set namespaceSeparator none
+class "Bus" as ubicaciones.dominio.Bus {
+  capacidad : int
+  estado
+  id_bus : str
+  placa : str
+  ruta_actual : Optional[Ruta]
+}
+class "EstadoBus" as ubicaciones.dominio.EstadoBus {
+  name
+}
+class "IServicioMapas" as ubicaciones.dominio.IServicioMapas {
+  {abstract}obtener_distancia(origen: PosicionGPS, destino: Paradero) -> float
+}
+class "Paradero" as ubicaciones.dominio.Paradero {
+  id_paradero : str
+  latitud : float
+  longitud : float
+  nombre : str
+}
+class "PosicionGPS" as ubicaciones.dominio.PosicionGPS {
+  fecha_hora : str
+  latitud : float
+  longitud : float
+  velocidad : float
+}
+class "Ruta" as ubicaciones.dominio.Ruta {
+  codigo : str
+  id_ruta : str
+  nombre : str
+  paraderos : List[Paradero]
+}
+class "Viaje" as ubicaciones.dominio.Viaje {
+  bus
+  eta_estimado_min : float
+  id_viaje : str
+  posiciones : List[PosicionGPS]
+  ruta
+}
+ubicaciones.dominio.Bus --> ubicaciones.dominio.EstadoBus : estado
+ubicaciones.dominio.Ruta --> ubicaciones.dominio.Paradero : paraderos
+ubicaciones.dominio.Viaje --> ubicaciones.dominio.PosicionGPS : posiciones
+ubicaciones.dominio.Bus --> ubicaciones.dominio.Ruta : ruta_actual
+ubicaciones.dominio.Bus --o ubicaciones.dominio.Viaje : bus
+ubicaciones.dominio.Ruta --o ubicaciones.dominio.Viaje : ruta
+@enduml
