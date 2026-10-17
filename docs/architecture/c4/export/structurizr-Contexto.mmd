@@ -1,0 +1,22 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["RutaSIT Arequipa - System Context"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Ciudadano de Arequipa que<br />consulta la ubicación de los<br />buses, el ETA a su paradero y<br />recibe alertas.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Operador</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Personal del SIT que<br />supervisa la flota en ruta y<br />monitorea alertas de desvío o<br />congestión.</div>"]
+    style 2 fill:#08427b,stroke:#052e56,color:#ffffff
+    3["<div style='font-weight: bold'>Dispositivos GPS de Buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Hardware embarcado en los 300<br />buses que transmite<br />coordenadas y velocidad cada<br />10 segundos.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Servicio Externo de Mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Proveedor cartográfico<br />externo (OpenStreetMap / API<br />de rutas) para visualización<br />y matrices de distancia.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    5["<div style='font-weight: bold'>RutaSIT Arequipa</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Permite el seguimiento de<br />buses en tiempo real, cálculo<br />de tiempos estimados de<br />llegada (ETA) y gestión de<br />alertas de desvío o<br />congestión.</div>"]
+    style 5 fill:#1168bd,stroke:#0b4884,color:#ffffff
+
+    1-. "<div>Consulta ubicación de buses,<br />ETA por paradero y recibe<br />alertas de desvío</div><div style='font-size: 70%'></div>" .->5
+    2-. "<div>Supervisa el estado de la<br />flota y consulta desvíos o<br />congestión</div><div style='font-size: 70%'></div>" .->5
+    3-. "<div>Envía posición geográfica y<br />velocidad cada 10 segundos</div><div style='font-size: 70%'>[HTTP/REST (JSON)]</div>" .->5
+    5-. "<div>Consulta cartografía y<br />matrices de distancia entre<br />coordenadas y paraderos</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
+  end

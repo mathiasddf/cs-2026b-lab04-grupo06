@@ -1,0 +1,33 @@
+@startuml
+set separator none
+title API RutaSIT - Dynamic
+
+left to right direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+Container_Boundary("RutaSITArequipa.APIRutaSIT_boundary", "API RutaSIT", $tags="") {
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, "Módulo de Ubicaciones", $techn="Paquete Python (ubicaciones)", $descr="Recibe, valida y procesa las posiciones GPS enviadas por los 300 buses cada 10 segundos.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, "Módulo de Rutas y Buses", $techn="Paquete Python (rutas_buses)", $descr="Gestiona el catálogo de rutas, paraderos, unidades de transporte y el ciclo de vida del Viaje.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, "Módulo de Cálculo de ETA", $techn="Paquete Python (calculo_eta)", $descr="Calcula y ajusta el tiempo estimado de llegada por segmento de ruta en menos de 15 segundos.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeAlertas, "Módulo de Alertas", $techn="Paquete Python (alertas)", $descr="Detecta desvíos de ruta o detenciones prolongadas (>60s) y genera avisos operativos.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, "Módulo de Consultas", $techn="Paquete Python (consultas)", $descr="Orquesta las peticiones de ubicación y ETA de pasajeros y operadores, y emite eventos SSE.", $tags="", $link="")
+}
+
+System(ServicioExternodeMapas, "Servicio Externo de Mapas", $descr="Proveedor cartográfico externo (OpenStreetMap / API de rutas) para visualización y matrices de distancia.", $tags="", $link="")
+Container(RutaSITArequipa.AplicacióndePasajerosPWA, "Aplicación de Pasajeros (PWA)", $techn="HTML5 / JS / SSE Client", $descr="Interfaz web progresiva para que el pasajero visualice el mapa, consulte paraderos y reciba alertas.", $tags="", $link="")
+ContainerDb(RutaSITArequipa.BasedeDatos, "Base de Datos", $techn="MySQL 8.0", $descr="Almacena rutas, paraderos, flota de buses, viajes activos, historial reciente de posiciones GPS y alertas.", $tags="", $link="")
+
+Rel(RutaSITArequipa.AplicacióndePasajerosPWA, RutaSITArequipa.APIRutaSIT.MódulodeConsultas, "1. 1. Solicita ETA (GET /eta?busId&paraderoId)", $techn="HTTPS/JSON y SSE", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, "2. 2. Busca viaje activo del bus", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, RutaSITArequipa.BasedeDatos, "3. 3. Lee datos del viaje y ruta asignada", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, "4. 4. Solicita calcular ETA hacia el paradero", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, "5. 5. Obtiene última posición GPS registrada", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, ServicioExternodeMapas, "6. 6. Consulta matriz de distancia por segmentos pendientes", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.APIRutaSIT.MódulodeAlertas, "7. 7. Verifica si el viaje presenta desvío o detención para adjuntar alerta", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

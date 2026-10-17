@@ -1,0 +1,50 @@
+graph TB
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["RutaSIT Arequipa - API RutaSIT - Components"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    3["<div style='font-weight: bold'>Dispositivos GPS de Buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Hardware embarcado en los 300<br />buses que transmite<br />coordenadas y velocidad cada<br />10 segundos.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Servicio Externo de Mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Proveedor cartográfico<br />externo (OpenStreetMap / API<br />de rutas) para visualización<br />y matrices de distancia.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    6["<div style='font-weight: bold'>Aplicación de Pasajeros (PWA)</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JS / SSE Client]</div><div style='font-size: 80%; margin-top:10px'>Interfaz web progresiva para<br />que el pasajero visualice el<br />mapa, consulte paraderos y<br />reciba alertas.</div>"]
+    style 6 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    7["<div style='font-weight: bold'>Panel de Operaciones</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JavaScript]</div><div style='font-size: 80%; margin-top:10px'>Aplicación web para el<br />monitoreo de la flota,<br />supervisión de rutas y<br />gestión de alertas.</div>"]
+    style 7 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    14[("<div style='font-weight: bold'>Base de Datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: MySQL 8.0]</div><div style='font-size: 80%; margin-top:10px'>Almacena rutas, paraderos,<br />flota de buses, viajes<br />activos, historial reciente<br />de posiciones GPS y alertas.</div>")]
+    style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
+
+    subgraph 8 ["API RutaSIT"]
+      style 8 fill:#ffffff,stroke:#2e6295,color:#2e6295
+
+      10["<div style='font-weight: bold'>Módulo de Ubicaciones</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (ubicaciones)]</div><div style='font-size: 80%; margin-top:10px'>Recibe, valida y procesa las<br />posiciones GPS enviadas por<br />los 300 buses cada 10<br />segundos.</div>"]
+      style 10 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      11["<div style='font-weight: bold'>Módulo de Rutas y Buses</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (rutas_buses)]</div><div style='font-size: 80%; margin-top:10px'>Gestiona el catálogo de<br />rutas, paraderos, unidades de<br />transporte y el ciclo de vida<br />del Viaje.</div>"]
+      style 11 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      12["<div style='font-weight: bold'>Módulo de Cálculo de ETA</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (calculo_eta)]</div><div style='font-size: 80%; margin-top:10px'>Calcula y ajusta el tiempo<br />estimado de llegada por<br />segmento de ruta en menos de<br />15 segundos.</div>"]
+      style 12 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      13["<div style='font-weight: bold'>Módulo de Alertas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (alertas)]</div><div style='font-size: 80%; margin-top:10px'>Detecta desvíos de ruta o<br />detenciones prolongadas<br />(>60s) y genera avisos<br />operativos.</div>"]
+      style 13 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      9["<div style='font-weight: bold'>Módulo de Consultas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (consultas)]</div><div style='font-size: 80%; margin-top:10px'>Orquesta las peticiones de<br />ubicación y ETA de pasajeros<br />y operadores, y emite eventos<br />SSE.</div>"]
+      style 9 fill:#85bbf0,stroke:#5d82a8,color:#000000
+    end
+
+    6-. "<div>Renderiza teselas de mapa<br />desde</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
+    3-. "<div>Envía lote de coordenadas GPS<br />a</div><div style='font-size: 70%'>[HTTP/REST (JSON)]</div>" .->10
+    6-. "<div>Solicita ETA y abre canal de<br />eventos en</div><div style='font-size: 70%'>[HTTPS/JSON y SSE]</div>" .->9
+    7-. "<div>Consulta estado de viajes y<br />alertas en</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->9
+    9-. "<div>Solicita cálculo de tiempo<br />estimado a</div><div style='font-size: 70%'></div>" .->12
+    9-. "<div>Consulta anomalías activas o<br />dispara avisos en</div><div style='font-size: 70%'></div>" .->13
+    9-. "<div>Busca viaje activo y<br />paraderos en</div><div style='font-size: 70%'></div>" .->11
+    12-. "<div>Obtiene última posición<br />válida de</div><div style='font-size: 70%'></div>" .->10
+    12-. "<div>Obtiene trazado y paraderos<br />de la ruta de</div><div style='font-size: 70%'></div>" .->11
+    13-. "<div>Verifica tiempo sin señal y<br />coordenadas en</div><div style='font-size: 70%'></div>" .->10
+    13-. "<div>Compara posición con el<br />corredor permitido de</div><div style='font-size: 70%'></div>" .->11
+    10-. "<div>Registra posición GPS y<br />actualiza estado en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    11-. "<div>Lee y actualiza viajes, buses<br />y paraderos en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    12-. "<div>Persiste ETA actualizado en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    13-. "<div>Registra alertas de desvío o<br />detención en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    9-. "<div>Lee proyecciones de consulta<br />en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    12-. "<div>Calcula distancia mediante<br />puerto IServicioMapas en</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
+  end

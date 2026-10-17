@@ -1,0 +1,33 @@
+@startuml
+set separator none
+title RutaSIT Arequipa - Containers
+
+left to right direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+Person(Pasajero, "Pasajero", $descr="Ciudadano de Arequipa que consulta la ubicación de los buses, el ETA a su paradero y recibe alertas.", $tags="", $link="")
+Person(Operador, "Operador", $descr="Personal del SIT que supervisa la flota en ruta y monitorea alertas de desvío o congestión.", $tags="", $link="")
+System(DispositivosGPSdeBuses, "Dispositivos GPS de Buses", $descr="Hardware embarcado en los 300 buses que transmite coordenadas y velocidad cada 10 segundos.", $tags="", $link="")
+System(ServicioExternodeMapas, "Servicio Externo de Mapas", $descr="Proveedor cartográfico externo (OpenStreetMap / API de rutas) para visualización y matrices de distancia.", $tags="", $link="")
+
+System_Boundary("RutaSITArequipa_boundary", "RutaSIT Arequipa", $tags="") {
+  ContainerDb(RutaSITArequipa.BasedeDatos, "Base de Datos", $techn="MySQL 8.0", $descr="Almacena rutas, paraderos, flota de buses, viajes activos, historial reciente de posiciones GPS y alertas.", $tags="", $link="")
+  Container(RutaSITArequipa.AplicacióndePasajerosPWA, "Aplicación de Pasajeros (PWA)", $techn="HTML5 / JS / SSE Client", $descr="Interfaz web progresiva para que el pasajero visualice el mapa, consulte paraderos y reciba alertas.", $tags="", $link="")
+  Container(RutaSITArequipa.PaneldeOperaciones, "Panel de Operaciones", $techn="HTML5 / JavaScript", $descr="Aplicación web para el monitoreo de la flota, supervisión de rutas y gestión de alertas.", $tags="", $link="")
+  Container(RutaSITArequipa.APIRutaSIT, "API RutaSIT", $techn="Python 3.12 / FastAPI", $descr="Monolito modular que recibe la telemetría GPS, calcula el ETA, detecta anomalías y sirve consultas.", $tags="", $link="")
+}
+
+Rel(Pasajero, RutaSITArequipa.AplicacióndePasajerosPWA, "Consulta mapa, paraderos y ETA en", $techn="HTTPS", $tags="", $link="")
+Rel(Operador, RutaSITArequipa.PaneldeOperaciones, "Monitorea unidades e incidentes en", $techn="HTTPS", $tags="", $link="")
+Rel(RutaSITArequipa.AplicacióndePasajerosPWA, RutaSITArequipa.APIRutaSIT, "Solicita ETA y recibe actualizaciones en tiempo real de", $techn="HTTPS/JSON y SSE", $tags="", $link="")
+Rel(RutaSITArequipa.PaneldeOperaciones, RutaSITArequipa.APIRutaSIT, "Consulta estado de flota y alertas en", $techn="HTTPS/JSON (REST)", $tags="", $link="")
+Rel(DispositivosGPSdeBuses, RutaSITArequipa.APIRutaSIT, "Envía telemetría de posición periódica a", $techn="HTTP/REST (JSON)", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT, RutaSITArequipa.BasedeDatos, "Lee y escribe viajes, posiciones, rutas y alertas en", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT, ServicioExternodeMapas, "Obtiene distancias en ruta desde", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSITArequipa.AplicacióndePasajerosPWA, ServicioExternodeMapas, "Renderiza teselas de mapa desde", $techn="HTTPS", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

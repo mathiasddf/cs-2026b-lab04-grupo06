@@ -1,0 +1,36 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["API RutaSIT - Dynamic"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    subgraph 8 ["API RutaSIT"]
+      style 8 fill:#ffffff,stroke:#2e6295,color:#2e6295
+
+      10["<div style='font-weight: bold'>Módulo de Ubicaciones</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (ubicaciones)]</div><div style='font-size: 80%; margin-top:10px'>Recibe, valida y procesa las<br />posiciones GPS enviadas por<br />los 300 buses cada 10<br />segundos.</div>"]
+      style 10 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      11["<div style='font-weight: bold'>Módulo de Rutas y Buses</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (rutas_buses)]</div><div style='font-size: 80%; margin-top:10px'>Gestiona el catálogo de<br />rutas, paraderos, unidades de<br />transporte y el ciclo de vida<br />del Viaje.</div>"]
+      style 11 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      12["<div style='font-weight: bold'>Módulo de Cálculo de ETA</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (calculo_eta)]</div><div style='font-size: 80%; margin-top:10px'>Calcula y ajusta el tiempo<br />estimado de llegada por<br />segmento de ruta en menos de<br />15 segundos.</div>"]
+      style 12 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      13["<div style='font-weight: bold'>Módulo de Alertas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (alertas)]</div><div style='font-size: 80%; margin-top:10px'>Detecta desvíos de ruta o<br />detenciones prolongadas<br />(>60s) y genera avisos<br />operativos.</div>"]
+      style 13 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      9["<div style='font-weight: bold'>Módulo de Consultas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Paquete Python (consultas)]</div><div style='font-size: 80%; margin-top:10px'>Orquesta las peticiones de<br />ubicación y ETA de pasajeros<br />y operadores, y emite eventos<br />SSE.</div>"]
+      style 9 fill:#85bbf0,stroke:#5d82a8,color:#000000
+    end
+
+    4["<div style='font-weight: bold'>Servicio Externo de Mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Proveedor cartográfico<br />externo (OpenStreetMap / API<br />de rutas) para visualización<br />y matrices de distancia.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    6["<div style='font-weight: bold'>Aplicación de Pasajeros (PWA)</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JS / SSE Client]</div><div style='font-size: 80%; margin-top:10px'>Interfaz web progresiva para<br />que el pasajero visualice el<br />mapa, consulte paraderos y<br />reciba alertas.</div>"]
+    style 6 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    14[("<div style='font-weight: bold'>Base de Datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: MySQL 8.0]</div><div style='font-size: 80%; margin-top:10px'>Almacena rutas, paraderos,<br />flota de buses, viajes<br />activos, historial reciente<br />de posiciones GPS y alertas.</div>")]
+    style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
+
+    6-. "<div>1. 1. Solicita ETA (GET<br />/eta?busId&paraderoId)</div><div style='font-size: 70%'>[HTTPS/JSON y SSE]</div>" .->9
+    9-. "<div>2. 2. Busca viaje activo del<br />bus</div><div style='font-size: 70%'></div>" .->11
+    11-. "<div>3. 3. Lee datos del viaje y<br />ruta asignada</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    9-. "<div>4. 4. Solicita calcular ETA<br />hacia el paradero</div><div style='font-size: 70%'></div>" .->12
+    12-. "<div>5. 5. Obtiene última posición<br />GPS registrada</div><div style='font-size: 70%'></div>" .->10
+    12-. "<div>6. 6. Consulta matriz de<br />distancia por segmentos<br />pendientes</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
+    9-. "<div>7. 7. Verifica si el viaje<br />presenta desvío o detención<br />para adjuntar alerta</div><div style='font-size: 70%'></div>" .->13
+  end

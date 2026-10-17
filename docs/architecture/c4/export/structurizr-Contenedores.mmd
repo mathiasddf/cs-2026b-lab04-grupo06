@@ -1,0 +1,37 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["RutaSIT Arequipa - Containers"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Ciudadano de Arequipa que<br />consulta la ubicación de los<br />buses, el ETA a su paradero y<br />recibe alertas.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Operador</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Personal del SIT que<br />supervisa la flota en ruta y<br />monitorea alertas de desvío o<br />congestión.</div>"]
+    style 2 fill:#08427b,stroke:#052e56,color:#ffffff
+    3["<div style='font-weight: bold'>Dispositivos GPS de Buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Hardware embarcado en los 300<br />buses que transmite<br />coordenadas y velocidad cada<br />10 segundos.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Servicio Externo de Mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Proveedor cartográfico<br />externo (OpenStreetMap / API<br />de rutas) para visualización<br />y matrices de distancia.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+
+    subgraph 5 ["RutaSIT Arequipa"]
+      style 5 fill:#ffffff,stroke:#0b4884,color:#0b4884
+
+      14[("<div style='font-weight: bold'>Base de Datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: MySQL 8.0]</div><div style='font-size: 80%; margin-top:10px'>Almacena rutas, paraderos,<br />flota de buses, viajes<br />activos, historial reciente<br />de posiciones GPS y alertas.</div>")]
+      style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      6["<div style='font-weight: bold'>Aplicación de Pasajeros (PWA)</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JS / SSE Client]</div><div style='font-size: 80%; margin-top:10px'>Interfaz web progresiva para<br />que el pasajero visualice el<br />mapa, consulte paraderos y<br />reciba alertas.</div>"]
+      style 6 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      7["<div style='font-weight: bold'>Panel de Operaciones</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JavaScript]</div><div style='font-size: 80%; margin-top:10px'>Aplicación web para el<br />monitoreo de la flota,<br />supervisión de rutas y<br />gestión de alertas.</div>"]
+      style 7 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      8["<div style='font-weight: bold'>API RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python 3.12 / FastAPI]</div><div style='font-size: 80%; margin-top:10px'>Monolito modular que recibe<br />la telemetría GPS, calcula el<br />ETA, detecta anomalías y<br />sirve consultas.</div>"]
+      style 8 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    end
+
+    1-. "<div>Consulta mapa, paraderos y<br />ETA en</div><div style='font-size: 70%'>[HTTPS]</div>" .->6
+    2-. "<div>Monitorea unidades e<br />incidentes en</div><div style='font-size: 70%'>[HTTPS]</div>" .->7
+    6-. "<div>Solicita ETA y recibe<br />actualizaciones en tiempo<br />real de</div><div style='font-size: 70%'>[HTTPS/JSON y SSE]</div>" .->8
+    7-. "<div>Consulta estado de flota y<br />alertas en</div><div style='font-size: 70%'>[HTTPS/JSON (REST)]</div>" .->8
+    3-. "<div>Envía telemetría de posición<br />periódica a</div><div style='font-size: 70%'>[HTTP/REST (JSON)]</div>" .->8
+    8-. "<div>Lee y escribe viajes,<br />posiciones, rutas y alertas<br />en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    8-. "<div>Obtiene distancias en ruta<br />desde</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
+    6-. "<div>Renderiza teselas de mapa<br />desde</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
+  end

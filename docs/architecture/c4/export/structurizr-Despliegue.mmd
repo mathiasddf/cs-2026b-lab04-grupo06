@@ -1,0 +1,38 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["RutaSIT Arequipa - Deployment - Producción"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    subgraph 43 ["Smartphone / PC del Pasajero"]
+      style 43 fill:#ffffff,stroke:#888888,color:#000000
+
+      44["<div style='font-weight: bold'>Aplicación de Pasajeros (PWA)</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JS / SSE Client]</div><div style='font-size: 80%; margin-top:10px'>Interfaz web progresiva para<br />que el pasajero visualice el<br />mapa, consulte paraderos y<br />reciba alertas.</div>"]
+      style 44 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    end
+
+    subgraph 45 ["PC de Centro de Control SIT"]
+      style 45 fill:#ffffff,stroke:#888888,color:#000000
+
+      46["<div style='font-weight: bold'>Panel de Operaciones</div><div style='font-size: 70%; margin-top: 0px'>[Container: HTML5 / JavaScript]</div><div style='font-size: 80%; margin-top:10px'>Aplicación web para el<br />monitoreo de la flota,<br />supervisión de rutas y<br />gestión de alertas.</div>"]
+      style 46 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    end
+
+    subgraph 47 ["Servidor VPS RutaSIT"]
+      style 47 fill:#ffffff,stroke:#888888,color:#000000
+
+      subgraph 49 ["Entorno de Ejecución Docker"]
+        style 49 fill:#ffffff,stroke:#888888,color:#000000
+
+        50["<div style='font-weight: bold'>API RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python 3.12 / FastAPI]</div><div style='font-size: 80%; margin-top:10px'>Monolito modular que recibe<br />la telemetría GPS, calcula el<br />ETA, detecta anomalías y<br />sirve consultas.</div>"]
+        style 50 fill:#438dd5,stroke:#2e6295,color:#ffffff
+        53[("<div style='font-weight: bold'>Base de Datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: MySQL 8.0]</div><div style='font-size: 80%; margin-top:10px'>Almacena rutas, paraderos,<br />flota de buses, viajes<br />activos, historial reciente<br />de posiciones GPS y alertas.</div>")]
+        style 53 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      end
+
+    end
+
+    44-. "<div>Solicita ETA y recibe<br />actualizaciones en tiempo<br />real de</div><div style='font-size: 70%'>[HTTPS/JSON y SSE]</div>" .->50
+    46-. "<div>Consulta estado de flota y<br />alertas en</div><div style='font-size: 70%'>[HTTPS/JSON (REST)]</div>" .->50
+    50-. "<div>Lee y escribe viajes,<br />posiciones, rutas y alertas<br />en</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->53
+  end

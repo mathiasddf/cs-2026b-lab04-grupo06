@@ -1,0 +1,22 @@
+@startuml
+set separator none
+title RutaSIT Arequipa - System Context
+
+left to right direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+
+Person(Pasajero, "Pasajero", $descr="Ciudadano de Arequipa que consulta la ubicación de los buses, el ETA a su paradero y recibe alertas.", $tags="", $link="")
+Person(Operador, "Operador", $descr="Personal del SIT que supervisa la flota en ruta y monitorea alertas de desvío o congestión.", $tags="", $link="")
+System(DispositivosGPSdeBuses, "Dispositivos GPS de Buses", $descr="Hardware embarcado en los 300 buses que transmite coordenadas y velocidad cada 10 segundos.", $tags="", $link="")
+System(ServicioExternodeMapas, "Servicio Externo de Mapas", $descr="Proveedor cartográfico externo (OpenStreetMap / API de rutas) para visualización y matrices de distancia.", $tags="", $link="")
+System(RutaSITArequipa, "RutaSIT Arequipa", $descr="Permite el seguimiento de buses en tiempo real, cálculo de tiempos estimados de llegada (ETA) y gestión de alertas de desvío o congestión.", $tags="", $link="")
+
+Rel(Pasajero, RutaSITArequipa, "Consulta ubicación de buses, ETA por paradero y recibe alertas de desvío", $techn="", $tags="", $link="")
+Rel(Operador, RutaSITArequipa, "Supervisa el estado de la flota y consulta desvíos o congestión", $techn="", $tags="", $link="")
+Rel(DispositivosGPSdeBuses, RutaSITArequipa, "Envía posición geográfica y velocidad cada 10 segundos", $techn="HTTP/REST (JSON)", $tags="", $link="")
+Rel(RutaSITArequipa, ServicioExternodeMapas, "Consulta cartografía y matrices de distancia entre coordenadas y paraderos", $techn="HTTPS/JSON", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

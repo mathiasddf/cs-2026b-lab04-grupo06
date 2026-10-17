@@ -1,0 +1,45 @@
+@startuml
+set separator none
+title RutaSIT Arequipa - API RutaSIT - Components
+
+top to bottom direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+System(DispositivosGPSdeBuses, "Dispositivos GPS de Buses", $descr="Hardware embarcado en los 300 buses que transmite coordenadas y velocidad cada 10 segundos.", $tags="", $link="")
+System(ServicioExternodeMapas, "Servicio Externo de Mapas", $descr="Proveedor cartográfico externo (OpenStreetMap / API de rutas) para visualización y matrices de distancia.", $tags="", $link="")
+Container(RutaSITArequipa.AplicacióndePasajerosPWA, "Aplicación de Pasajeros (PWA)", $techn="HTML5 / JS / SSE Client", $descr="Interfaz web progresiva para que el pasajero visualice el mapa, consulte paraderos y reciba alertas.", $tags="", $link="")
+Container(RutaSITArequipa.PaneldeOperaciones, "Panel de Operaciones", $techn="HTML5 / JavaScript", $descr="Aplicación web para el monitoreo de la flota, supervisión de rutas y gestión de alertas.", $tags="", $link="")
+ContainerDb(RutaSITArequipa.BasedeDatos, "Base de Datos", $techn="MySQL 8.0", $descr="Almacena rutas, paraderos, flota de buses, viajes activos, historial reciente de posiciones GPS y alertas.", $tags="", $link="")
+
+Container_Boundary("RutaSITArequipa.APIRutaSIT_boundary", "API RutaSIT", $tags="") {
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, "Módulo de Ubicaciones", $techn="Paquete Python (ubicaciones)", $descr="Recibe, valida y procesa las posiciones GPS enviadas por los 300 buses cada 10 segundos.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, "Módulo de Rutas y Buses", $techn="Paquete Python (rutas_buses)", $descr="Gestiona el catálogo de rutas, paraderos, unidades de transporte y el ciclo de vida del Viaje.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, "Módulo de Cálculo de ETA", $techn="Paquete Python (calculo_eta)", $descr="Calcula y ajusta el tiempo estimado de llegada por segmento de ruta en menos de 15 segundos.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeAlertas, "Módulo de Alertas", $techn="Paquete Python (alertas)", $descr="Detecta desvíos de ruta o detenciones prolongadas (>60s) y genera avisos operativos.", $tags="", $link="")
+  Component(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, "Módulo de Consultas", $techn="Paquete Python (consultas)", $descr="Orquesta las peticiones de ubicación y ETA de pasajeros y operadores, y emite eventos SSE.", $tags="", $link="")
+}
+
+Rel(RutaSITArequipa.AplicacióndePasajerosPWA, ServicioExternodeMapas, "Renderiza teselas de mapa desde", $techn="HTTPS", $tags="", $link="")
+Rel(DispositivosGPSdeBuses, RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, "Envía lote de coordenadas GPS a", $techn="HTTP/REST (JSON)", $tags="", $link="")
+Rel(RutaSITArequipa.AplicacióndePasajerosPWA, RutaSITArequipa.APIRutaSIT.MódulodeConsultas, "Solicita ETA y abre canal de eventos en", $techn="HTTPS/JSON y SSE", $tags="", $link="")
+Rel(RutaSITArequipa.PaneldeOperaciones, RutaSITArequipa.APIRutaSIT.MódulodeConsultas, "Consulta estado de viajes y alertas en", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, "Solicita cálculo de tiempo estimado a", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.APIRutaSIT.MódulodeAlertas, "Consulta anomalías activas o dispara avisos en", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, "Busca viaje activo y paraderos en", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, "Obtiene última posición válida de", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, "Obtiene trazado y paraderos de la ruta de", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeAlertas, RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, "Verifica tiempo sin señal y coordenadas en", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeAlertas, RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, "Compara posición con el corredor permitido de", $techn="", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeUbicaciones, RutaSITArequipa.BasedeDatos, "Registra posición GPS y actualiza estado en", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeRutasyBuses, RutaSITArequipa.BasedeDatos, "Lee y actualiza viajes, buses y paraderos en", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, RutaSITArequipa.BasedeDatos, "Persiste ETA actualizado en", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeAlertas, RutaSITArequipa.BasedeDatos, "Registra alertas de desvío o detención en", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeConsultas, RutaSITArequipa.BasedeDatos, "Lee proyecciones de consulta en", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSITArequipa.APIRutaSIT.MódulodeCálculodeETA, ServicioExternodeMapas, "Calcula distancia mediante puerto IServicioMapas en", $techn="HTTPS/JSON", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+set separator none
+title RutaSIT Arequipa - Deployment - Producción
+
+left to right direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Deployment>
+
+Deployment_Node(Producción.SmartphonePCdelPasajero, "Smartphone / PC del Pasajero", $type="Android / iOS / Navegador Web", $descr="", $tags="", $link="") {
+  Container(Producción.SmartphonePCdelPasajero.AplicacióndePasajerosPWA_1, "Aplicación de Pasajeros (PWA)", $techn="HTML5 / JS / SSE Client", $descr="Interfaz web progresiva para que el pasajero visualice el mapa, consulte paraderos y reciba alertas.", $tags="", $link="")
+}
+
+Deployment_Node(Producción.PCdeCentrodeControlSIT, "PC de Centro de Control SIT", $type="Windows / Linux - Navegador Web", $descr="", $tags="", $link="") {
+  Container(Producción.PCdeCentrodeControlSIT.PaneldeOperaciones_1, "Panel de Operaciones", $techn="HTML5 / JavaScript", $descr="Aplicación web para el monitoreo de la flota, supervisión de rutas y gestión de alertas.", $tags="", $link="")
+}
+
+Deployment_Node(Producción.ServidorVPSRutaSIT, "Servidor VPS RutaSIT", $type="Ubuntu 24.04 LTS (2 vCPU, 4 GB RAM - Bajo costo)", $descr="", $tags="", $link="") {
+  Deployment_Node(Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker, "Entorno de Ejecución Docker", $type="Docker Engine + Docker Compose", $descr="", $tags="", $link="") {
+    Container(Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker.APIRutaSIT_1, "API RutaSIT", $techn="Python 3.12 / FastAPI", $descr="Monolito modular que recibe la telemetría GPS, calcula el ETA, detecta anomalías y sirve consultas.", $tags="", $link="")
+    ContainerDb(Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker.BasedeDatos_1, "Base de Datos", $techn="MySQL 8.0", $descr="Almacena rutas, paraderos, flota de buses, viajes activos, historial reciente de posiciones GPS y alertas.", $tags="", $link="")
+  }
+
+}
+
+Rel(Producción.SmartphonePCdelPasajero.AplicacióndePasajerosPWA_1, Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker.APIRutaSIT_1, "Solicita ETA y recibe actualizaciones en tiempo real de", $techn="HTTPS/JSON y SSE", $tags="", $link="")
+Rel(Producción.PCdeCentrodeControlSIT.PaneldeOperaciones_1, Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker.APIRutaSIT_1, "Consulta estado de flota y alertas en", $techn="HTTPS/JSON (REST)", $tags="", $link="")
+Rel(Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker.APIRutaSIT_1, Producción.ServidorVPSRutaSIT.EntornodeEjecuciónDocker.BasedeDatos_1, "Lee y escribe viajes, posiciones, rutas y alertas en", $techn="SQL/TCP", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml
