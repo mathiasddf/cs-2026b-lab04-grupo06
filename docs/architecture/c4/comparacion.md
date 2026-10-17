@@ -1,0 +1,14 @@
+# Comparación de Vistas y Herramientas C4 - RutaSIT Arequipa
+
+## 1. Vista Dinámica C4 vs. Diagrama de Secuencia UML (E4)
+El diagrama de secuencia UML del Laboratorio 05 (`secuencia-consultar-eta.puml`) muestra el detalle algorítmico interno a nivel de código (Nivel 4): incluye firmas exactas de métodos (`calcularETAHacia()`, `sumarTiempoSegmento()`), bucles (`loop` por cada segmento de ruta), bloques condicionales (`alt` para viaje en ruta, desviado o no encontrado; `opt` para alerta push asíncrona) y códigos de estado HTTP (`200 OK`, `404 Not Found`). En cambio, la vista dinámica de C4 (`ConsultarETA`) omite la lógica condicional e iterativa interna y se enfoca en cómo colaboran los componentes arquitectónicos (Nivel 3) y contenedores mediante pasos numerados sobre relaciones ya definidas en el modelo. Por ello, la vista dinámica C4 sirve para arquitectos y líderes técnicos que necesitan validar el recorrido extremo a extremo de una petición, mientras que el diagrama de secuencia UML está dirigido a los desarrolladores encargados de programar y probar las clases del módulo.
+
+---
+
+## 2. Modelado (Structurizr DSL) vs. Diagramación a mano (C4-PlantUML) (E6)
+
+| Criterio | C4-PlantUML escrito a mano (`contexto-manual.puml`) | Structurizr DSL exportado (`workspace.dsl`) |
+|---|---|---|
+| **Tiempo invertido** | Rápido para un solo diagrama aislado (~5–10 min), pero lento si se deben escribir las 5 vistas por separado porque hay que repetir las declaraciones de personas, sistemas y contenedores en cada archivo. | Toma un poco más de tiempo inicial (~25–30 min) estructurar la jerarquía completa del modelo, pero una vez definido, exportar las 5 vistas a PlantUML y Mermaid toma menos de 5 segundos por línea de comandos. |
+| **Errores encontrados** | Es propenso a errores de tipeo en los alias de las macros (`Rel`, `Person`, `System_Ext`) y permite conectar elementos que no existen en otros niveles sin que ninguna herramienta advierta la incoherencia. | El comando `structurizr validate` detecta inmediatamente errores sintácticos, identificadores inexistentes, relaciones duplicadas o intentos de usar en una vista dinámica una relación que no fue declarada en el modelo. |
+| **Impacto ante cambios (¿Qué pasa si mañana cambia el nombre de un contenedor?)** | Si el contenedor `"API RutaSIT"` cambia de nombre o de tecnología (por ejemplo, de FastAPI a Django), habría que buscar y editar manualmente todos los archivos `.puml` y `.mmd` donde aparece (Contenedores, Componentes, Dinámica y Despliegue), corriendo el riesgo de dejar diagramas desactualizados. | Al ser una **única fuente de verdad (Single Source of Truth)**, basta con cambiar el nombre o tecnología en una sola línea dentro del bloque `model` de `workspace.dsl` y volver a ejecutar `export`: las 5 vistas se actualizan automáticamente de manera 100% coherente. |
