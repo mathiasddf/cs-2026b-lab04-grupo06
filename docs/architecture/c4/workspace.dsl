@@ -60,6 +60,25 @@ workspace "RutaSIT Arequipa" "Modelo C4 del sistema de seguimiento en tiempo rea
         rutasit.api.consultas -> rutasit.db "Lee proyecciones de consulta en" "SQL/TCP"
 
         rutasit.api.calculoEta -> mapas "Calcula distancia mediante puerto IServicioMapas en" "HTTPS/JSON"
+
+        # Entorno de Despliegue (Nivel Despliegue - E5)
+        produccion = deploymentEnvironment "Producción" {
+            deploymentNode "Smartphone / PC del Pasajero" "" "Android / iOS / Navegador Web" {
+                containerInstance rutasit.pwa
+            }
+            deploymentNode "PC de Centro de Control SIT" "" "Windows / Linux - Navegador Web" {
+                containerInstance rutasit.panel
+            }
+            deploymentNode "Servidor VPS RutaSIT" "" "Ubuntu 24.04 LTS (2 vCPU, 4 GB RAM - Bajo costo)" {
+                deploymentNode "Proxy Inverso" "" "Nginx" {
+                    # Recibe tráfico HTTPS/SSE y redirige al contenedor de la API
+                }
+                deploymentNode "Entorno de Ejecución Docker" "" "Docker Engine + Docker Compose" {
+                    containerInstance rutasit.api
+                    containerInstance rutasit.db
+                }
+            }
+        }
     }
 
     views {
@@ -76,6 +95,22 @@ workspace "RutaSIT Arequipa" "Modelo C4 del sistema de seguimiento en tiempo rea
         component rutasit.api "Componentes" "Nivel 3: Diagrama de componentes del monolito modular API RutaSIT." {
             include *
             autolayout tb
+        }
+
+        dynamic rutasit.api "ConsultarETA" "Vista dinámica: Flujo crítico de consulta de ETA por paradero (HU-03)." {
+            rutasit.pwa -> rutasit.api.consultas "1. Solicita ETA (GET /eta?busId&paraderoId)"
+            rutasit.api.consultas -> rutasit.api.rutasBuses "2. Busca viaje activo del bus"
+            rutasit.api.rutasBuses -> rutasit.db "3. Lee datos del viaje y ruta asignada"
+            rutasit.api.consultas -> rutasit.api.calculoEta "4. Solicita calcular ETA hacia el paradero"
+            rutasit.api.calculoEta -> rutasit.api.ubicaciones "5. Obtiene última posición GPS registrada"
+            rutasit.api.calculoEta -> mapas "6. Consulta matriz de distancia por segmentos pendientes"
+            rutasit.api.consultas -> rutasit.api.alertas "7. Verifica si el viaje presenta desvío o detención para adjuntar alerta"
+            autolayout lr
+        }
+
+        deployment rutasit produccion "Despliegue" "Vista de despliegue en el entorno de Producción (MVP de bajo presupuesto)." {
+            include *
+            autolayout lr
         }
 
         styles {
