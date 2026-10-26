@@ -8,7 +8,7 @@ from src.consultas.ia import ClaudeAdapter, ConCacheLLM, ExplicadorRetrasosIA
 
 
 class MockClienteLLM:
-    """Doble de prueba con respuesta configurable y contador de llamadas para E4 y E5."""
+    """Doble de prueba dinámico para simular salidas personalizadas de IA."""
 
     def __init__(self, respuesta: str):
         self.respuesta = respuesta
@@ -71,14 +71,9 @@ def test_observer_nuevo_suscriptor_sin_tocar_el_servicio():
     auditor = SuscriptorAuditoriaSIT()
     servicio = ServicioConsultas()
 
-    if hasattr(servicio, "publicador"):
-        servicio.publicador.suscribir("viaje_en_ruta", auditor)
-        viaje = Viaje("V-400", "V5A-789", "CONECTA", "EN_RUTA", [SegmentoRuta("Av. Ejército", 5.0)])
-        servicio.consultar_eta(viaje, modo_calculo="FLUJO_LIBRE")
-    else:
-        pub = PublicadorEventos()
-        pub.suscribir("viaje_en_ruta", auditor)
-        pub.publicar("viaje_en_ruta", {"id": "V-400", "eta": 10.0})
+    servicio.publicador.suscribir("viaje_en_ruta", auditor)
+    viaje = Viaje("V-400", "V5A-789", "CONECTA", "EN_RUTA", [SegmentoRuta("Av. Ejército", 5.0)])
+    servicio.consultar_eta(viaje, modo_calculo="FLUJO_LIBRE")
 
     assert auditor.registros == ["auditoria:viaje_en_ruta:V-400"]
 
@@ -115,7 +110,7 @@ def test_decorator_cache_llm_evita_llamadas_repetidas():
     assert llm_falso.llamadas == 1
 
 
-# --- PRUEBA DE E5: Chain of Responsibility (Guardrails de IA) ---
+# --- PRUEBAS DE E5: Chain of Responsibility (Guardrails de IA) ---
 
 def test_chain_guardrail_longitud_maxima_bloquea_texto_excesivo():
     """Valida que el eslabón LongitudMaximaParadero bloquee respuestas > 180 caracteres (E5)."""
@@ -124,3 +119,12 @@ def test_chain_guardrail_longitud_maxima_bloquea_texto_excesivo():
 
     with pytest.raises(ValueError, match="demasiado larga"):
         explicador.explicar("V5A-789", "DETENIDO", ["Sin señal GPS"])
+
+
+def test_chain_guardrail_afirmaciones_prohibidas_bloquea_texto_no_permitido():
+    """Valida que el eslabón SinAfirmacionesProhibidas bloquee promesas engañosas (E5)."""
+    llm_falso = MockClienteLLM("Llegada 100% seguro sin tráfico.")
+    explicador = ExplicadorRetrasosIA({"CLAUDE": ClaudeAdapter(llm_falso)})
+
+    with pytest.raises(ValueError, match="afirmación no permitida"):
+        explicador.explicar("V5A-789", "DETENIDO", ["Tráfico denso"])
