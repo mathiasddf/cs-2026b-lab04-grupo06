@@ -1,5 +1,5 @@
-"""Servicio principal de RutaSIT Arequipa refactorizado con patrones GoF."""
-from dataclasses import dataclass, field
+"""Servicio principal de RutaSIT Arequipa refactorizado con patrones GoF (E2 a E5)."""
+from dataclasses import dataclass
 from typing import List, Optional, Dict
 from abc import ABC, abstractmethod
 
@@ -12,6 +12,18 @@ from src.consultas.estados import (
     EstadoDetenido,
     EstadoFinalizado,
     TransicionInvalidaError,
+)
+from src.consultas.eventos import (
+    PublicadorEventos,
+    NotificadorPushPasajero,
+    MonitorPanelOperador,
+    PantallaParadero,
+)
+from src.consultas.ia import (
+    ClaudeAdapter,
+    LocalLLMAdapter,
+    ConCacheLLM,
+    ExplicadorRetrasosIA,
 )
 
 
@@ -128,12 +140,29 @@ class FabricaGPS:
 
 
 class ServicioConsultas:
-    def __init__(self, gps_conecta=None, gps_cayma=None, llm=None):
+    def __init__(self, gps_conecta=None, gps_cayma=None, llm=None, publicador=None):
         self.fabrica_gps = FabricaGPS(gps_conecta, gps_cayma)
         self.llm = llm or ClienteLLMFalso()
         self.eventos: List[str] = []
+        self.publicador = publicador or self._crear_publicador_default()
 
-    def consultar_eta(self, viaje: Viaje, modo_calculo: str = "FLUJO_LIBRE", pasajero_id: str = "P01") -> dict:
+        self.explicador = ExplicadorRetrasosIA(
+            {
+                "CLAUDE": ConCacheLLM(ClaudeAdapter(self.llm)),
+                "LOCAL": ConCacheLLM(LocalLLMAdapter(self.llm)),
+            }
+        )
+
+    def _crear_publicador_default(self) -> PublicadorEventos:
+        pub = PublicadorEventos()
+        pub.suscribir("viaje_anomalo", NotificadorPushPasajero(self.eventos))
+        pub.suscribir("viaje_anomalo", MonitorPanelOperador(self.eventos))
+        pub.suscribir("viaje_en_ruta", PantallaParadero(self.eventos))
+        return pub
+
+    def consultar_eta(
+        self, viaje: Viaje, modo_calculo: str = "FLUJO_LIBRE", pasajero_id: str = "P01"
+    ) -> dict:
         if viaje.estado == "FINALIZADO":
             raise ValueError("El viaje ya ha finalizado")
         if not viaje.segmentos:
@@ -141,7 +170,11 @@ class ServicioConsultas:
 
         estrategia = self.fabrica_gps.obtener_estrategia(viaje.operador)
         telemetria = estrategia.obtener_telemetria(viaje)
-        vel_kmh, age_sec, en_corredor = telemetria["speed_kmh"], telemetria["age_sec"], telemetria["en_corredor"]
+        vel_kmh, age_sec, en_corredor = (
+            telemetria["speed_kmh"],
+            telemetria["age_sec"],
+            telemetria["en_corredor"],
+        )
 
         if viaje.estado == "PROGRAMADO":
             if vel_kmh > 0 and age_sec <= 60:
@@ -156,7 +189,7 @@ class ServicioConsultas:
 
         distancia_total = sum(s.distancia_km for s in viaje.segmentos)
         vel_efectiva = max(vel_kmh, 15.0)
-        
+
         if modo_calculo == "FLUJO_LIBRE":
             eta = (distancia_total / vel_efectiva) * 60.0
         elif modo_calculo == "HORA_PUNTA":
@@ -166,13 +199,25 @@ class ServicioConsultas:
         else:
             raise ValueError(f"Algoritmo de ETA no soportado: {modo_calculo}")
 
-        if viaje.estado in ("DESVIADO", "DETENIDO"):
-            eta = round(eta + 8.0, 2)
-            self.eventos.append(f"push:{pasajero_id}:{viaje.alerta} (ETA: {eta:.2f} min)")
-            self.eventos.append(f"panel:{viaje.id}:{viaje.estado}:{eta:.2f}")
-        else:
-            eta = round(eta, 2)
-            self.eventos.append(f"paradero:{viaje.id}:ETA {eta:.2f} min")
-
+        es_anomalo = viaje.estado in ("DESVIADO", "DETENIDO")
+        eta = round(eta + 8.0, 2) if es_anomalo else round(eta, 2)
         viaje.eta_minutos = eta
+
+        evento = "viaje_anomalo" if es_anomalo else "viaje_en_ruta"
+        self.publicador.publicar(
+            evento,
+            {
+                "id": viaje.id,
+                "pasajero_id": pasajero_id,
+                "estado": viaje.estado,
+                "eta": viaje.eta_minutos,
+                "alerta": viaje.alerta,
+            },
+        )
+
         return {"estado": viaje.estado, "eta_min": viaje.eta_minutos, "alerta": viaje.alerta}
+
+    def explicar_retraso(
+        self, viaje: Viaje, eventos_ruta: List[str], proveedor: str = "CLAUDE"
+    ) -> str:
+        return self.explicador.explicar(viaje.placa, viaje.estado, eventos_ruta, proveedor)
