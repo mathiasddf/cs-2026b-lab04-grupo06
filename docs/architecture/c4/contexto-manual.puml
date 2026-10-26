@@ -1,0 +1,22 @@
+@startuml contexto-manual
+!include <C4/C4_Context>
+skinparam dpi 180
+LAYOUT_LEFT_RIGHT()
+
+title Contexto de RutaSIT Arequipa (C4-PlantUML escrito a mano)
+
+Person(pasajero, "Pasajero", "Ciudadano de Arequipa que consulta buses, ETA y recibe alertas.")
+Person(operador, "Operador", "Personal del SIT que supervisa la flota y monitorea desvíos.")
+
+System(rutasit, "RutaSIT Arequipa", "Seguimiento de buses en tiempo real, cálculo de ETA y gestión de alertas de desvío o congestión.")
+
+System_Ext(gps, "Dispositivos GPS de Buses", "Hardware en los 300 buses que envía posición cada 10s.")
+System_Ext(mapas, "Servicio Externo de Mapas", "Proveedor cartográfico para mapas y cálculo de distancias.")
+
+Rel(pasajero, rutasit, "Consulta ubicación de buses, ETA y recibe alertas")
+Rel(operador, rutasit, "Supervisa el estado de la flota y consulta desvíos")
+Rel(gps, rutasit, "Envía posición geográfica cada 10 segundos", "HTTP/REST")
+Rel(rutasit, mapas, "Consulta cartografía y distancias en ruta", "HTTPS/JSON")
+
+SHOW_LEGEND()
+@enduml
