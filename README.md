@@ -162,4 +162,35 @@ C4Context
   * [Explicación para público no técnico (`explicacion.md`)](docs/architecture/c4/explicacion.md)
   * [Bitácora de IA del Laboratorio 06 (`bitacora-ia.md`)](docs/architecture/c4/bitacora-ia.md)
 
-    
+---
+
+## Patrones de diseño (Lab 07)
+
+En el Laboratorio 07 se refactorizó el flujo crítico de consulta de ETA y detección de anomalías (`consultar_eta`) e integración de IA (`explicar_retraso`) del módulo de Consultas de **RutaSIT Arequipa**, aplicando **7 patrones de diseño GoF** protegidos por **pruebas de caracterización** (`tests/test_comportamiento.py`) y **pruebas unitarias de patrones** (`tests/test_patrones.py`).
+
+### 1. Tabla Olor $\rightarrow$ Patrón GoF $\rightarrow$ Prueba
+
+| Olor detectado en `antes/servicio.py` | Patrón GoF aplicado | Archivo refactorizado | Prueba automatizada que lo verifica |
+|---|---|---|---|
+| `if/elif` por operador GPS y acoplamiento a estructuras de cada SDK (`dict` en km/h vs `tuple` en m/s) | **Adapter + Strategy + Factory (registro)** (`EstrategiaGPS` / `ProveedorGPS`, `AdaptadorGpsConecta`, `AdaptadorGpsTransCayma`, `FabricaGPS`) | `src/consultas/servicio.py` y `src/consultas/proveedores_gps.py` | `test_open_closed_principle_agregar_nuevo_gps_sin_modificar_servicio` |
+| Bucles `for/try/except` de reintentos ante `TimeoutError` duplicados por operador | **Decorator** (`ConReintentosGPS`) | `src/consultas/proveedores_gps.py` | `test_decorator_reintentos_gps_recupera_ante_timeout` |
+| Condicionales anidados sobre `viaje.estado` (`PROGRAMADO`, `EN_RUTA`, `DESVIADO`, `DETENIDO`, `FINALIZADO`) | **State** (`EstadoViajeBase` y 5 subclases de estado del Lab 05) | `src/consultas/estados.py` | `test_state_bloquea_transicion_invalida` y `test_state_transiciones_validas` |
+| Construcción manual de avisos Push, Panel Operador y Pantalla de Paradero dentro del servicio | **Observer** (`PublicadorEventos`, `SuscriptorRuta` y 3 suscriptores) | `src/consultas/eventos.py` | `test_observer_nuevo_suscriptor_sin_tocar_el_servicio` |
+| Llamadas repetidas al LLM por el mismo incidente vial | **Decorator** (`ConCacheLLM`) | `src/consultas/ia.py` | `test_decorator_cache_llm_evita_llamadas_repetidas` |
+| Acoplamiento al proveedor de IA y validaciones de salida mezcladas en el servicio | **Strategy + Adapter (`ProveedorLLM`, `ClaudeAdapter`) + Chain of Responsibility (`Guardrail`)** | `src/consultas/ia.py` | `test_chain_guardrail_longitud_maxima_bloquea_texto_excesivo` y `test_chain_guardrail_afirmaciones_prohibidas_bloquea_texto_no_permitido` |
+
+### 2. Tabla de Métricas (`radon` antes vs. después)
+
+| Métrica | Antes (`antes/servicio.py`) | Después (Con Patrones GoF) | Cambio / Impacto |
+|---|---|---|---|
+| Complejidad ciclomática de `consultar_eta()` | **24 (Rango D)** | **8 (Rango B) / 4 (Rango A)** | **Reducción drástica (> 66% a 83%)** |
+| Complejidad ciclomática de `explicar_retraso()` | **8 (Rango B)** | **1 (Rango A)** | **-87.5%** |
+| Complejidad ciclomática promedio | **8.67 (Rango B)** | **1.68 (Rango A)** | **-80.6%** |
+| Índice de Mantenibilidad (`radon mi`) | **58.42 (Rango A)** | **85.40 (Rango A)** | **+26.98 pts** |
+| Líneas de código (SLOC) | **110 SLOC** (1 archivo) | **338 SLOC** (6 archivos) | Trade-off de indirección justificado por OCP/DIP |
+
+### 3. Enlaces a Documentación y Entregables (Lab 07)
+
+- **ADR-005:** [Adopción de patrones de diseño GoF](docs/architecture/adr/005-patrones-de-diseno.md)
+- **Análisis y Métricas:** [Olores detectados (`olores.md`)](docs/design/patrones/olores.md) | [Métricas `radon` y trade-off (`metricas.md`)](docs/design/patrones/metricas.md) | [Bitácora de IA (`bitacora-ia.md`)](docs/design/patrones/bitacora-ia.md)
+- **Diagramas PlantUML:** [Diagrama de Clases Lab 05 actualizado (`clases.puml`)](docs/design/clases.puml) | [Patrones en `docs/design/patrones/`](docs/design/patrones/)
