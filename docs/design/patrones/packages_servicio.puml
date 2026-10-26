@@ -1,0 +1,23 @@
+@startuml packages_servicio
+set namespaceSeparator none
+package "src.consultas" as src.consultas {
+}
+package "src.consultas.estados" as src.consultas.estados {
+}
+package "src.consultas.estrategias_eta" as src.consultas.estrategias_eta {
+}
+package "src.consultas.eventos" as src.consultas.eventos {
+}
+package "src.consultas.externos" as src.consultas.externos {
+}
+package "src.consultas.ia" as src.consultas.ia {
+}
+package "src.consultas.proveedores_gps" as src.consultas.proveedores_gps {
+}
+package "src.consultas.servicio" as src.consultas.servicio {
+}
+src.consultas.servicio --> src.consultas.estados
+src.consultas.servicio --> src.consultas.eventos
+src.consultas.servicio --> src.consultas.externos
+src.consultas.servicio --> src.consultas.ia
+@enduml

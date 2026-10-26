@@ -1,0 +1,31 @@
+@startuml strategy_adapter
+skinparam classAttributeIconSize 0
+
+interface EstrategiaGPS <<Strategy>> {
+  + obtener_telemetria(viaje: Viaje): dict
+}
+
+class AdaptadorGpsConecta <<Adapter>> {
+  - sdk: GpsConectaSDK
+  + obtener_telemetria(viaje: Viaje): dict
+}
+
+class AdaptadorGpsTransCayma <<Adapter>> {
+  - cliente: GpsTransCaymaClient
+  + obtener_telemetria(viaje: Viaje): dict
+}
+
+class FabricaGPS <<Factory>> {
+  - _estrategias: Dict[str, EstrategiaGPS]
+  + obtener_estrategia(operador: str): EstrategiaGPS
+}
+
+class ServicioConsultas {
+  + consultar_eta(viaje: Viaje): dict
+}
+
+EstrategiaGPS <|.. AdaptadorGpsConecta
+EstrategiaGPS <|.. AdaptadorGpsTransCayma
+FabricaGPS --> EstrategiaGPS
+ServicioConsultas --> FabricaGPS
+@enduml

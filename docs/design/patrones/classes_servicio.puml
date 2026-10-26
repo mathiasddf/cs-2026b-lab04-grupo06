@@ -1,0 +1,196 @@
+@startuml classes_servicio
+set namespaceSeparator none
+class "AdaptadorGpsConecta" as src.consultas.servicio.AdaptadorGpsConecta {
+  sdk
+  obtener_telemetria(viaje: Viaje) -> dict
+}
+class "AdaptadorGpsTransCayma" as src.consultas.servicio.AdaptadorGpsTransCayma {
+  cliente
+  obtener_telemetria(viaje: Viaje) -> dict
+}
+class "ClaudeAdapter" as src.consultas.ia.ClaudeAdapter {
+  completar(prompt: str) -> str
+}
+class "ClienteLLMFalso" as src.consultas.externos.ClienteLLMFalso {
+  generar(prompt: str) -> str
+}
+class "ConCacheLLM" as src.consultas.ia.ConCacheLLM {
+  completar(prompt: str) -> str
+}
+class "ConReintentosGPS" as src.consultas.proveedores_gps.ConReintentosGPS {
+  obtener_lectura(identificador: str) -> LecturaGPS
+}
+class "ConectaGpsAdapter" as src.consultas.proveedores_gps.ConectaGpsAdapter {
+  obtener_lectura(identificador: str) -> LecturaGPS
+}
+class "ETAClimaLluvia" as src.consultas.estrategias_eta.ETAClimaLluvia {
+  calcular(distancia_km: float, velocidad_kmh: float) -> float
+}
+class "ETAFlujoLibre" as src.consultas.estrategias_eta.ETAFlujoLibre {
+  calcular(distancia_km: float, velocidad_kmh: float) -> float
+}
+class "ETAHoraPunta" as src.consultas.estrategias_eta.ETAHoraPunta {
+  calcular(distancia_km: float, velocidad_kmh: float) -> float
+}
+class "EstadoDesviado" as src.consultas.estados.EstadoDesviado {
+  nombre : str
+  finalizar(viaje) -> None
+  reanudar(viaje) -> None
+}
+class "EstadoDetenido" as src.consultas.estados.EstadoDetenido {
+  nombre : str
+  finalizar(viaje) -> None
+  reanudar(viaje) -> None
+}
+class "EstadoEnRuta" as src.consultas.estados.EstadoEnRuta {
+  nombre : str
+  desviar(viaje, motivo: str) -> None
+  detener(viaje, motivo: str) -> None
+  finalizar(viaje) -> None
+}
+class "EstadoFinalizado" as src.consultas.estados.EstadoFinalizado {
+  nombre : str
+}
+class "EstadoProgramado" as src.consultas.estados.EstadoProgramado {
+  nombre : str
+  iniciar(viaje) -> None
+}
+class "EstadoViajeBase" as src.consultas.estados.EstadoViajeBase {
+  nombre : str
+  desviar(viaje, motivo: str) -> None
+  detener(viaje, motivo: str) -> None
+  finalizar(viaje) -> None
+  iniciar(viaje) -> None
+  reanudar(viaje) -> None
+}
+class "EstrategiaETA" as src.consultas.estrategias_eta.EstrategiaETA {
+  {abstract}calcular(distancia_km: float, velocidad_kmh: float) -> float
+}
+class "EstrategiaGPS" as src.consultas.servicio.EstrategiaGPS {
+  {abstract}obtener_telemetria(viaje: Viaje) -> dict
+}
+class "ExplicadorRetrasosIA" as src.consultas.ia.ExplicadorRetrasosIA {
+  explicar(placa: str, estado: str, eventos_ruta: list[str], proveedor: str) -> str
+}
+class "FabricaEstrategiasETA" as src.consultas.estrategias_eta.FabricaEstrategiasETA {
+  crear(modo: str) -> EstrategiaETA
+  registrar(modo: str, creador)
+}
+class "FabricaGPS" as src.consultas.servicio.FabricaGPS {
+  obtener_estrategia(operador: str) -> EstrategiaGPS
+}
+class "FabricaProveedoresGPS" as src.consultas.proveedores_gps.FabricaProveedoresGPS {
+  crear(operador: str) -> ProveedorGPS
+  registrar(operador: str, creador)
+}
+class "GpsConectaSDK" as src.consultas.externos.GpsConectaSDK {
+  obtener_telemetria(placa: str) -> dict
+}
+class "GpsTransCaymaClient" as src.consultas.externos.GpsTransCaymaClient {
+  fetch_position(viaje_id: str) -> tuple
+}
+class "Guardrail" as src.consultas.ia.Guardrail {
+  validar(texto: str) -> str
+}
+class "LecturaGPS" as src.consultas.proveedores_gps.LecturaGPS {
+  antiguedad_seg : int
+  en_corredor : bool
+  latitud : float
+  longitud : float
+  velocidad_kmh : float
+}
+class "LocalLLMAdapter" as src.consultas.ia.LocalLLMAdapter {
+  completar(prompt: str) -> str
+}
+class "LongitudMaximaParadero" as src.consultas.ia.LongitudMaximaParadero {
+}
+class "MonitorPanelOperador" as src.consultas.eventos.MonitorPanelOperador {
+  actualizar(evento: str, datos: dict)
+}
+class "NotificadorPushPasajero" as src.consultas.eventos.NotificadorPushPasajero {
+  actualizar(evento: str, datos: dict)
+}
+class "PantallaParadero" as src.consultas.eventos.PantallaParadero {
+  actualizar(evento: str, datos: dict)
+}
+class "ProveedorGPS" as src.consultas.proveedores_gps.ProveedorGPS {
+  {abstract}obtener_lectura(identificador: str) -> LecturaGPS
+}
+class "ProveedorLLM" as src.consultas.ia.ProveedorLLM {
+  {abstract}completar(prompt: str) -> str
+}
+class "PublicadorEventos" as src.consultas.eventos.PublicadorEventos {
+  publicar(evento: str, datos: dict)
+  suscribir(evento: str, suscriptor: SuscriptorRuta)
+}
+class "SegmentoRuta" as src.consultas.servicio.SegmentoRuta {
+  distancia_km : float
+  nombre : str
+}
+class "ServicioConsultas" as src.consultas.servicio.ServicioConsultas {
+  eventos : List[str]
+  explicador
+  fabrica_gps
+  llm
+  publicador
+  consultar_eta(viaje: Viaje, modo_calculo: str, pasajero_id: str) -> dict
+  explicar_retraso(viaje: Viaje, eventos_ruta: List[str], proveedor: str) -> str
+}
+class "SinAfirmacionesProhibidas" as src.consultas.ia.SinAfirmacionesProhibidas {
+  PROHIBIDAS : list
+}
+class "SinTiemposInventados" as src.consultas.ia.SinTiemposInventados {
+}
+class "SuscriptorRuta" as src.consultas.eventos.SuscriptorRuta {
+  {abstract}actualizar(evento: str, datos: dict)
+}
+class "TransCaymaGpsAdapter" as src.consultas.proveedores_gps.TransCaymaGpsAdapter {
+  obtener_lectura(identificador: str) -> LecturaGPS
+}
+class "<color:red>TransicionInvalidaError</color>" as src.consultas.estados.TransicionInvalidaError {
+}
+class "Viaje" as src.consultas.servicio.Viaje {
+  alerta : Optional[str]
+  estado : str
+  estado_obj
+  eta_minutos : float
+  id : str
+  operador : str
+  placa : str
+  segmentos : list
+  desviar(motivo: str) -> None
+  detener(motivo: str) -> None
+  finalizar() -> None
+  iniciar() -> None
+  reanudar() -> None
+}
+src.consultas.estados.EstadoDesviado --|> src.consultas.estados.EstadoViajeBase
+src.consultas.estados.EstadoDetenido --|> src.consultas.estados.EstadoViajeBase
+src.consultas.estados.EstadoEnRuta --|> src.consultas.estados.EstadoViajeBase
+src.consultas.estados.EstadoFinalizado --|> src.consultas.estados.EstadoViajeBase
+src.consultas.estados.EstadoProgramado --|> src.consultas.estados.EstadoViajeBase
+src.consultas.estrategias_eta.ETAClimaLluvia --|> src.consultas.estrategias_eta.EstrategiaETA
+src.consultas.estrategias_eta.ETAFlujoLibre --|> src.consultas.estrategias_eta.EstrategiaETA
+src.consultas.estrategias_eta.ETAHoraPunta --|> src.consultas.estrategias_eta.EstrategiaETA
+src.consultas.eventos.MonitorPanelOperador --|> src.consultas.eventos.SuscriptorRuta
+src.consultas.eventos.NotificadorPushPasajero --|> src.consultas.eventos.SuscriptorRuta
+src.consultas.eventos.PantallaParadero --|> src.consultas.eventos.SuscriptorRuta
+src.consultas.ia.ClaudeAdapter --|> src.consultas.ia.ProveedorLLM
+src.consultas.ia.ConCacheLLM --|> src.consultas.ia.ProveedorLLM
+src.consultas.ia.LocalLLMAdapter --|> src.consultas.ia.ProveedorLLM
+src.consultas.ia.LongitudMaximaParadero --|> src.consultas.ia.Guardrail
+src.consultas.ia.SinAfirmacionesProhibidas --|> src.consultas.ia.Guardrail
+src.consultas.ia.SinTiemposInventados --|> src.consultas.ia.Guardrail
+src.consultas.proveedores_gps.ConReintentosGPS --|> src.consultas.proveedores_gps.ProveedorGPS
+src.consultas.proveedores_gps.ConectaGpsAdapter --|> src.consultas.proveedores_gps.ProveedorGPS
+src.consultas.proveedores_gps.TransCaymaGpsAdapter --|> src.consultas.proveedores_gps.ProveedorGPS
+src.consultas.servicio.AdaptadorGpsConecta --|> src.consultas.servicio.EstrategiaGPS
+src.consultas.servicio.AdaptadorGpsTransCayma --|> src.consultas.servicio.EstrategiaGPS
+src.consultas.servicio.ServicioConsultas --> src.consultas.eventos.PublicadorEventos : publicador
+src.consultas.servicio.ServicioConsultas --> src.consultas.externos.ClienteLLMFalso : llm
+src.consultas.servicio.AdaptadorGpsConecta --> src.consultas.externos.GpsConectaSDK : sdk
+src.consultas.servicio.AdaptadorGpsTransCayma --> src.consultas.externos.GpsTransCaymaClient : cliente
+src.consultas.estados.EstadoViajeBase --* src.consultas.servicio.Viaje : estado_obj
+src.consultas.ia.ExplicadorRetrasosIA --* src.consultas.servicio.ServicioConsultas : explicador
+src.consultas.servicio.FabricaGPS --* src.consultas.servicio.ServicioConsultas : fabrica_gps
+@enduml

@@ -1,0 +1,34 @@
+@startuml state
+skinparam classAttributeIconSize 0
+
+abstract class EstadoViajeBase <<State>> {
+  + nombre: str
+  + iniciar(viaje: Viaje): void
+  + desviar(viaje: Viaje, motivo: str): void
+  + detener(viaje: Viaje, motivo: str): void
+  + reanudar(viaje: Viaje): void
+  + finalizar(viaje: Viaje): void
+}
+
+class EstadoProgramado <<ConcreteState>>
+class EstadoEnRuta <<ConcreteState>>
+class EstadoDesviado <<ConcreteState>>
+class EstadoDetenido <<ConcreteState>>
+class EstadoFinalizado <<ConcreteState>>
+
+class Viaje <<Context>> {
+  - estado_obj: EstadoViajeBase
+  + iniciar(): void
+  + desviar(motivo: str): void
+  + detener(motivo: str): void
+  + reanudar(): void
+  + finalizar(): void
+}
+
+EstadoViajeBase <|-- EstadoProgramado
+EstadoViajeBase <|-- EstadoEnRuta
+EstadoViajeBase <|-- EstadoDesviado
+EstadoViajeBase <|-- EstadoDetenido
+EstadoViajeBase <|-- EstadoFinalizado
+Viaje --> EstadoViajeBase
+@enduml

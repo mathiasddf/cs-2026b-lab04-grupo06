@@ -1,0 +1,30 @@
+@startuml ia_component
+skinparam classAttributeIconSize 0
+
+interface ProveedorIA <<Strategy>> {
+  + generar_explicacion(prompt: str): str
+}
+
+class ClaudeAdapter <<Adapter>>
+class LocalLLMAdapter <<Adapter>>
+class ConCacheLLM <<Decorator>> {
+  - proveedor: ProveedorIA
+  - cache: dict
+}
+
+abstract class ManejadorGuardrail <<Handler>> {
+  - siguiente: ManejadorGuardrail
+  + validar(texto: str): void
+}
+
+class GuardrailLongitud <<ConcreteHandler>>
+class GuardrailAfirmaciones <<ConcreteHandler>>
+
+ProveedorIA <|.. ClaudeAdapter
+ProveedorIA <|.. LocalLLMAdapter
+ProveedorIA <|.. ConCacheLLM
+ConCacheLLM o-- ProveedorIA
+ManejadorGuardrail <|-- GuardrailLongitud
+ManejadorGuardrail <|-- GuardrailAfirmaciones
+ManejadorGuardrail --> ManejadorGuardrail : siguiente
+@enduml
