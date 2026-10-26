@@ -1,83 +1,85 @@
-"""Patrón State: implementa la máquina de estados del Viaje diseñada en el Laboratorio 05."""
-from src.consultas.proveedores_gps import LecturaGPS
+from abc import ABC
+
+class TransicionInvalidaError(ValueError):
+    """Excepción lanzada cuando se intenta una transición de estado no permitida."""
+    pass
 
 
-class EstadoViaje:
-    """Clase base que prohíbe todas las transiciones por defecto."""
-    nombre = "?"
-    es_anomalo = False
+class EstadoViajeBase(ABC):
+    """Clase base prohibitiva que rechaza todas las transiciones por defecto."""
+    @property
+    def nombre(self) -> str:
+        return self.__class__.__name__.replace("Estado", "").upper()
 
-    def procesar_ubicacion(self, viaje, lectura: LecturaGPS):
-        raise ValueError(f"No se puede actualizar ubicación de un viaje en estado {self.nombre}")
+    def iniciar(self, viaje) -> None:
+        raise TransicionInvalidaError(f"No se puede iniciar un viaje en estado {self.nombre}")
 
-    def finalizar(self, viaje):
-        raise ValueError(f"No se puede finalizar un viaje en estado {self.nombre}")
+    def desviar(self, viaje, motivo: str) -> None:
+        raise TransicionInvalidaError(f"No se puede desviar un viaje en estado {self.nombre}")
+
+    def detener(self, viaje, motivo: str) -> None:
+        raise TransicionInvalidaError(f"No se puede detener un viaje en estado {self.nombre}")
+
+    def reanudar(self, viaje) -> None:
+        raise TransicionInvalidaError(f"No se puede reanudar un viaje en estado {self.nombre}")
+
+    def finalizar(self, viaje) -> None:
+        raise TransicionInvalidaError(f"No se puede finalizar un viaje en estado {self.nombre}")
 
 
-def _transicionar_segun_lectura(viaje, lectura: LecturaGPS):
-    if lectura.antiguedad_seg > 60:
-        viaje.alerta = "Bus sin señal por más de 60s"
-        viaje.cambiar_a(Detenido())
-    elif not lectura.en_corredor:
-        viaje.alerta = "Bus desviado de su corredor permitido"
-        viaje.cambiar_a(Desviado())
-    else:
+class EstadoProgramado(EstadoViajeBase):
+    @property
+    def nombre(self) -> str:
+        return "PROGRAMADO"
+
+    def iniciar(self, viaje) -> None:
+        viaje.estado_obj = EstadoEnRuta()
+
+
+class EstadoEnRuta(EstadoViajeBase):
+    @property
+    def nombre(self) -> str:
+        return "EN_RUTA"
+
+    def desviar(self, viaje, motivo: str) -> None:
+        viaje.estado_obj = EstadoDesviado()
+        viaje.alerta = motivo
+
+    def detener(self, viaje, motivo: str) -> None:
+        viaje.estado_obj = EstadoDetenido()
+        viaje.alerta = motivo
+
+    def finalizar(self, viaje) -> None:
+        viaje.estado_obj = EstadoFinalizado()
+
+
+class EstadoDesviado(EstadoViajeBase):
+    @property
+    def nombre(self) -> str:
+        return "DESVIADO"
+
+    def reanudar(self, viaje) -> None:
+        viaje.estado_obj = EstadoEnRuta()
         viaje.alerta = None
-        viaje.cambiar_a(EnRuta())
+
+    def finalizar(self, viaje) -> None:
+        viaje.estado_obj = EstadoFinalizado()
 
 
-class Programado(EstadoViaje):
-    nombre = "PROGRAMADO"
+class EstadoDetenido(EstadoViajeBase):
+    @property
+    def nombre(self) -> str:
+        return "DETENIDO"
 
-    def procesar_ubicacion(self, viaje, lectura: LecturaGPS):
-        if lectura.velocidad_kmh <= 0 or lectura.antiguedad_seg > 60:
-            raise ValueError("El viaje programado aún no inicia recorrido")
-        _transicionar_segun_lectura(viaje, lectura)
+    def reanudar(self, viaje) -> None:
+        viaje.estado_obj = EstadoEnRuta()
+        viaje.alerta = None
 
-
-class EnRuta(EstadoViaje):
-    nombre = "EN_RUTA"
-
-    def procesar_ubicacion(self, viaje, lectura: LecturaGPS):
-        _transicionar_segun_lectura(viaje, lectura)
-
-    def finalizar(self, viaje):
-        viaje.cambiar_a(Finalizado())
+    def finalizar(self, viaje) -> None:
+        viaje.estado_obj = EstadoFinalizado()
 
 
-class Desviado(EstadoViaje):
-    nombre = "DESVIADO"
-    es_anomalo = True
-
-    def procesar_ubicacion(self, viaje, lectura: LecturaGPS):
-        _transicionar_segun_lectura(viaje, lectura)
-
-    def finalizar(self, viaje):
-        viaje.cambiar_a(Finalizado())
-
-
-class Detenido(EstadoViaje):
-    nombre = "DETENIDO"
-    es_anomalo = True
-
-    def procesar_ubicacion(self, viaje, lectura: LecturaGPS):
-        _transicionar_segun_lectura(viaje, lectura)
-
-    def finalizar(self, viaje):
-        viaje.cambiar_a(Finalizado())
-
-
-class Finalizado(EstadoViaje):
-    nombre = "FINALIZADO"
-
-    def procesar_ubicacion(self, viaje, lectura: LecturaGPS):
-        raise ValueError("El viaje ya ha finalizado")
-
-
-MAPA_ESTADOS_INICIALES = {
-    "PROGRAMADO": Programado,
-    "EN_RUTA": EnRuta,
-    "DESVIADO": Desviado,
-    "DETENIDO": Detenido,
-    "FINALIZADO": Finalizado,
-}
+class EstadoFinalizado(EstadoViajeBase):
+    @property
+    def nombre(self) -> str:
+        return "FINALIZADO"
