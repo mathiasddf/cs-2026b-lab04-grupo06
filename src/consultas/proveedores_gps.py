@@ -14,6 +14,7 @@ class LecturaGPS:
 
 class ProveedorGPS(ABC):
     """Puerto (interfaz común): desacopla el dominio de los SDK de cada operador de transporte."""
+
     @abstractmethod
     def obtener_lectura(self, identificador: str) -> LecturaGPS:
         pass
@@ -21,6 +22,7 @@ class ProveedorGPS(ABC):
 
 class ConectaGpsAdapter(ProveedorGPS):
     """ADAPTER: traduce el diccionario de GpsConectaSDK al objeto de dominio LecturaGPS."""
+
     def __init__(self, sdk):
         self._sdk = sdk
 
@@ -37,6 +39,7 @@ class ConectaGpsAdapter(ProveedorGPS):
 
 class TransCaymaGpsAdapter(ProveedorGPS):
     """ADAPTER: traduce la tupla (HTTP, dict en m/s) de GpsTransCaymaClient a LecturaGPS (en km/h)."""
+
     def __init__(self, cliente):
         self._cliente = cliente
 
@@ -56,6 +59,7 @@ class TransCaymaGpsAdapter(ProveedorGPS):
 
 class ConReintentosGPS(ProveedorGPS):
     """DECORATOR: agrega tolerancia a fallos (reintentos ante TimeoutError) sin tocar los adaptadores."""
+
     def __init__(self, interno: ProveedorGPS, intentos: int = 3):
         self._interno = interno
         self._intentos = intentos
@@ -71,6 +75,7 @@ class ConReintentosGPS(ProveedorGPS):
 
 class FabricaProveedoresGPS:
     """FACTORY (registro): instancia el adaptador del operador y lo envuelve con ConReintentosGPS."""
+
     def __init__(self):
         self._creadores = {}
 
