@@ -1,121 +1,74 @@
-workspace "RutaSIT Arequipa" "Modelo C4 del sistema de seguimiento en tiempo real de buses del SIT Arequipa" {
-
-    !identifiers hierarchical
-
+workspace "RutaSIT Arequipa 2.0" "Arquitectura guiada por atributos de calidad (Lab 08 - ADD 3.0, ATAM-lite y Fitness Functions)" {
     model {
-        pasajero = person "Pasajero" "Ciudadano de Arequipa que consulta la ubicación de los buses, el ETA a su paradero y recibe alertas."
-        operador = person "Operador" "Personal del SIT que supervisa la flota en ruta y monitorea alertas de desvío o congestión."
+        pasajero = person "Pasajero del SIT" "Ciudadano de Arequipa que consulta en tiempo real el ETA y desvíos de su bus."
+        operadorSit = person "Operador Municipal SIT" "Supervisa la flota de 1200 buses y configura desvíos viales sin desplegar código."
 
-        gpsBuses = softwareSystem "Dispositivos GPS de Buses" "Hardware embarcado en los 300 buses que transmite coordenadas y velocidad cada 10 segundos." "Externo"
-        mapas = softwareSystem "Servicio Externo de Mapas" "Proveedor cartográfico externo (OpenStreetMap / API de rutas) para visualización y matrices de distancia." "Externo"
+        sdkConecta = softwareSystem "SDK GPS ConectaAQP" "Proveedor externo de telemetría GPS de la concesionaria A (JSON km/h)." "External"
+        sdkTransCayma = softwareSystem "SDK GPS TransCayma" "Proveedor externo de telemetría GPS de la concesionaria B (HTTP tuple m/s)." "External"
+        proveedorLlm = softwareSystem "Proveedor LLM (Claude / Local)" "Modelo de lenguaje externo para explicar motivos de retraso." "External"
 
-        rutasit = softwareSystem "RutaSIT Arequipa" "Permite el seguimiento de buses en tiempo real, cálculo de tiempos estimados de llegada (ETA) y gestión de alertas de desvío o congestión." {
-            pwa = container "Aplicación de Pasajeros (PWA)" "Interfaz web progresiva para que el pasajero visualice el mapa, consulte paraderos y reciba alertas." "HTML5 / JS / SSE Client" "Web Browser"
-            panel = container "Panel de Operaciones" "Aplicación web para el monitoreo de la flota, supervisión de rutas y gestión de alertas." "HTML5 / JavaScript" "Web Browser"
-            api = container "API RutaSIT" "Monolito modular que recibe la telemetría GPS, calcula el ETA, detecta anomalías y sirve consultas." "Python 3.12 / FastAPI" {
-                consultas = component "Módulo de Consultas" "Orquesta las peticiones de ubicación y ETA de pasajeros y operadores, y emite eventos SSE." "Paquete Python (consultas)"
-                ubicaciones = component "Módulo de Ubicaciones" "Recibe, valida y procesa las posiciones GPS enviadas por los 300 buses cada 10 segundos." "Paquete Python (ubicaciones)"
-                rutasBuses = component "Módulo de Rutas y Buses" "Gestiona el catálogo de rutas, paraderos, unidades de transporte y el ciclo de vida del Viaje." "Paquete Python (rutas_buses)"
-                calculoEta = component "Módulo de Cálculo de ETA" "Calcula y ajusta el tiempo estimado de llegada por segmento de ruta en menos de 15 segundos." "Paquete Python (calculo_eta)"
-                alertas = component "Módulo de Alertas" "Detecta desvíos de ruta o detenciones prolongadas (>60s) y genera avisos operativos." "Paquete Python (alertas)"
+        rutasit = softwareSystem "RutaSIT Arequipa 2.0 (Multiconcesionaria)" "Sistema de seguimiento de 1200 buses, cálculo de ETA para 50 000 consultas/h y alertas en tiempo real." {
+
+            pwaPasajero = container "PWA Pasajero Offline-First" "React + Service Worker + IndexedDB" "Muestra último mapa y ETA sin señal en <= 200 ms y reconecta por SSE [QA-03]." "Web Browser"
+            panelOperador = container "Panel Operador SIT" "Web SPA" "Monitorea anomalías y actualiza trazados/desvíos GTFS en <= 2 h sin desplegar código [QA-06]." "Web Browser"
+
+            apiMonolito = container "API Monolito Modular" "Python 3.12 / FastAPI + JWT + SSE" "Orquesta Consultas, Ubicaciones, Rutas, ETA y Alertas. Valida claim concesionaria_id en JWT [QA-01, QA-02, QA-04]." {
+                compConsultas = component "ServicioConsultas" "Python Class" "Flujo crítico consultar_eta y explicar_retraso [QA-01, QA-04]."
+                compResiliencia = component "ConCircuitBreakerGPS" "Decorator (Lab 07/08)" "Abre el circuito tras 3 timeouts y sirve última posición válida desde PostgreSQL [QA-02]."
+                compAdaptadoresGps = component "Adaptadores ProveedorGPS" "Adapter + Factory (Lab 07)" "Traduce SDKs de concesionarias sin tocar el dominio [QA-07]."
+                compEstrategiasEta = component "Estrategias de ETA" "Strategy + Factory (Lab 07)" "Calcula ETA en flujo libre, hora punta o lluvia [QA-01]."
+                compEstadosViaje = component "Máquina de Estados Viaje" "State (Lab 07)" "Gestiona PROGRAMADO, EN_RUTA, DESVIADO, DETENIDO y FINALIZADO."
+                compEventos = component "PublicadorEventos" "Observer (Lab 07)" "Despacha eventos hacia SSE de paraderos y alertas push."
+                compExplicadorIa = component "ExplicadorRetrasosIA" "Strategy + Cache + Guardrails (Lab 07)" "Aísla el LLM y bloquea tiempos inventados."
             }
-            db = container "Base de Datos" "Almacena rutas, paraderos, flota de buses, viajes activos, historial reciente de posiciones GPS y alertas." "MySQL 8.0" "Database"
+
+            cacheRedis = container "Caché en Memoria" "Redis 7" "Cachea ETA por (paradero, ruta) con TTL de 10 s para soportar 50 000 consultas/h [QA-01]." "Database"
+            baseDatos = container "Base de Datos Geoespacial" "PostgreSQL 16 + PostGIS + RLS" "Índices compuestos [QA-01], tabla ultima_posicion_bus [QA-02], políticas RLS por concesionaria [QA-04] y geometrías GTFS [QA-06]." "Database"
         }
 
-        # Relaciones de Contexto (Nivel 1)
-        pasajero -> rutasit "Consulta ubicación de buses, ETA por paradero y recibe alertas de desvío"
-        operador -> rutasit "Supervisa el estado de la flota y consulta desvíos o congestión"
-        gpsBuses -> rutasit "Envía posición geográfica y velocidad cada 10 segundos" "HTTP/REST (JSON)"
-        rutasit -> mapas "Consulta cartografía y matrices de distancia entre coordenadas y paraderos" "HTTPS/JSON"
+        # Relaciones a nivel de Contenedores con trazabilidad a escenarios [QA-xx]
+        pasajero -> pwaPasajero "Consulta ETA y recibe alertas en paraderos [HTTPS]"
+        operadorSit -> panelOperador "Configura desvíos viales y audita flota [HTTPS]"
+        pwaPasajero -> apiMonolito "Consulta ETA y mantiene stream SSE con Last-Event-ID [HTTPS/SSE] [QA-01, QA-03]"
+        panelOperador -> apiMonolito "Actualiza geometrías GTFS y consulta panel con JWT [HTTPS/JSON] [QA-04, QA-06]"
 
-        # Relaciones de Contenedores (Nivel 2)
-        pasajero -> rutasit.pwa "Consulta mapa, paraderos y ETA en" "HTTPS"
-        operador -> rutasit.panel "Monitorea unidades e incidentes en" "HTTPS"
-        rutasit.pwa -> rutasit.api "Solicita ETA y recibe actualizaciones en tiempo real de" "HTTPS/JSON y SSE"
-        rutasit.panel -> rutasit.api "Consulta estado de flota y alertas en" "HTTPS/JSON (REST)"
-        gpsBuses -> rutasit.api "Envía telemetría de posición periódica a" "HTTP/REST (JSON)"
-        rutasit.api -> rutasit.db "Lee y escribe viajes, posiciones, rutas y alertas en" "SQL/TCP"
-        rutasit.api -> mapas "Obtiene distancias en ruta desde" "HTTPS/JSON"
-        rutasit.pwa -> mapas "Renderiza teselas de mapa desde" "HTTPS"
+        apiMonolito -> cacheRedis "Lee y escribe ETA cacheado con TTL 10 s [RESP] [QA-01]"
+        apiMonolito -> baseDatos "Lee con índice geoespacial, aplica RLS y guarda última posición conocida [SQL] [QA-01, QA-02, QA-04, QA-06]"
+        apiMonolito -> sdkConecta "Consulta telemetría con reintentos y circuit breaker [HTTPS] [QA-02, QA-07]"
+        apiMonolito -> sdkTransCayma "Consulta telemetría con reintentos y circuit breaker [HTTPS] [QA-02, QA-07]"
+        apiMonolito -> proveedorLlm "Solicita explicación de retraso validada por guardrails [HTTPS]"
 
-        # Relaciones de Componentes (Nivel 3 - Sin ciclos, coherente con Lab 04 y Lab 05)
-        gpsBuses -> rutasit.api.ubicaciones "Envía lote de coordenadas GPS a" "HTTP/REST (JSON)"
-        rutasit.pwa -> rutasit.api.consultas "Solicita ETA y abre canal de eventos en" "HTTPS/JSON y SSE"
-        rutasit.panel -> rutasit.api.consultas "Consulta estado de viajes y alertas en" "HTTPS/JSON"
-
-        rutasit.api.consultas -> rutasit.api.calculoEta "Solicita cálculo de tiempo estimado a"
-        rutasit.api.consultas -> rutasit.api.alertas "Consulta anomalías activas o dispara avisos en"
-        rutasit.api.consultas -> rutasit.api.rutasBuses "Busca viaje activo y paraderos en"
-
-        rutasit.api.calculoEta -> rutasit.api.ubicaciones "Obtiene última posición válida de"
-        rutasit.api.calculoEta -> rutasit.api.rutasBuses "Obtiene trazado y paraderos de la ruta de"
-
-        rutasit.api.alertas -> rutasit.api.ubicaciones "Verifica tiempo sin señal y coordenadas en"
-        rutasit.api.alertas -> rutasit.api.rutasBuses "Compara posición con el corredor permitido de"
-
-        rutasit.api.ubicaciones -> rutasit.db "Registra posición GPS y actualiza estado en" "SQL/TCP"
-        rutasit.api.rutasBuses -> rutasit.db "Lee y actualiza viajes, buses y paraderos en" "SQL/TCP"
-        rutasit.api.calculoEta -> rutasit.db "Persiste ETA actualizado en" "SQL/TCP"
-        rutasit.api.alertas -> rutasit.db "Registra alertas de desvío o detención en" "SQL/TCP"
-        rutasit.api.consultas -> rutasit.db "Lee proyecciones de consulta en" "SQL/TCP"
-
-        rutasit.api.calculoEta -> mapas "Calcula distancia mediante puerto IServicioMapas en" "HTTPS/JSON"
-
-        # Entorno de Despliegue (Nivel Despliegue - E5)
-        produccion = deploymentEnvironment "Producción" {
-            deploymentNode "Smartphone / PC del Pasajero" "" "Android / iOS / Navegador Web" {
-                containerInstance rutasit.pwa
-            }
-            deploymentNode "PC de Centro de Control SIT" "" "Windows / Linux - Navegador Web" {
-                containerInstance rutasit.panel
-            }
-            deploymentNode "Servidor VPS RutaSIT" "" "Ubuntu 24.04 LTS (2 vCPU, 4 GB RAM - Bajo costo)" {
-                deploymentNode "Proxy Inverso" "" "Nginx" {
-                    # Recibe tráfico HTTPS/SSE y redirige al contenedor de la API
-                }
-                deploymentNode "Entorno de Ejecución Docker" "" "Docker Engine + Docker Compose" {
-                    containerInstance rutasit.api
-                    containerInstance rutasit.db
-                }
-            }
-        }
+        # Relaciones internas de Componentes
+        compConsultas -> compResiliencia "Obtiene lectura GPS resiliente [QA-02]"
+        compResiliencia -> compAdaptadoresGps "Envuelve adaptadores con circuit breaker [QA-02]"
+        compResiliencia -> baseDatos "Lee/actualiza tabla ultima_posicion_bus en caída [QA-02]"
+        compAdaptadoresGps -> sdkConecta "Adapta dict km/h [QA-07]"
+        compAdaptadoresGps -> sdkTransCayma "Adapta tupla m/s [QA-07]"
+        compConsultas -> compEstrategiasEta "Calcula minutos de llegada [QA-01]"
+        compConsultas -> compEstadosViaje "Actualiza estado del viaje"
+        compConsultas -> compEventos "Publica eventos de ruta"
+        compConsultas -> compExplicadorIa "Delega explicación con caché y guardrails"
     }
 
     views {
-        systemContext rutasit "Contexto" "Nivel 1: Diagrama de contexto del sistema RutaSIT Arequipa." {
+        systemContext rutasit "Contexto" {
             include *
-            autolayout lr
+            autoLayout lr
         }
 
-        container rutasit "Contenedores" "Nivel 2: Diagrama de contenedores de RutaSIT Arequipa." {
+        container rutasit "Contenedores" {
             include *
-            autolayout lr
+            autoLayout lr
         }
 
-        component rutasit.api "Componentes" "Nivel 3: Diagrama de componentes del monolito modular API RutaSIT." {
+        component apiMonolito "Componentes" {
             include *
-            autolayout tb
-        }
-
-        dynamic rutasit.api "ConsultarETA" "Vista dinámica: Flujo crítico de consulta de ETA por paradero (HU-03)." {
-            rutasit.pwa -> rutasit.api.consultas "1. Solicita ETA (GET /eta?busId&paraderoId)"
-            rutasit.api.consultas -> rutasit.api.rutasBuses "2. Busca viaje activo del bus"
-            rutasit.api.rutasBuses -> rutasit.db "3. Lee datos del viaje y ruta asignada"
-            rutasit.api.consultas -> rutasit.api.calculoEta "4. Solicita calcular ETA hacia el paradero"
-            rutasit.api.calculoEta -> rutasit.api.ubicaciones "5. Obtiene última posición GPS registrada"
-            rutasit.api.calculoEta -> mapas "6. Consulta matriz de distancia por segmentos pendientes"
-            rutasit.api.consultas -> rutasit.api.alertas "7. Verifica si el viaje presenta desvío o detención para adjuntar alerta"
-            autolayout lr
-        }
-
-        deployment rutasit produccion "Despliegue" "Vista de despliegue en el entorno de Producción (MVP de bajo presupuesto)." {
-            include *
-            autolayout lr
+            autoLayout tb
         }
 
         styles {
             element "Person" {
-                shape person
+                shape Person
                 background #08427B
                 color #ffffff
             }
@@ -123,7 +76,7 @@ workspace "RutaSIT Arequipa" "Modelo C4 del sistema de seguimiento en tiempo rea
                 background #1168BD
                 color #ffffff
             }
-            element "Externo" {
+            element "External" {
                 background #999999
                 color #ffffff
             }
@@ -131,15 +84,14 @@ workspace "RutaSIT Arequipa" "Modelo C4 del sistema de seguimiento en tiempo rea
                 background #438DD5
                 color #ffffff
             }
+            element "Database" {
+                shape Cylinder
+                background #2E6DA4
+                color #ffffff
+            }
             element "Component" {
                 background #85BBF0
                 color #000000
-            }
-            element "Database" {
-                shape cylinder
-            }
-            element "Web Browser" {
-                shape WebBrowser
             }
         }
     }

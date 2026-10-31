@@ -1,0 +1,29 @@
+@startuml contenedores_rutasit2
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+title RutaSIT Arequipa 2.0: Vista de Contenedores después de tres iteraciones de ADD (C4)
+
+actor "Pasajero del SIT\n[Person]\nCiudadano en paradero\no en ruta" as pasajero #08427B
+actor "Operador Municipal SIT\n[Person]\nCentro de Control\nArequipa" as operador #08427B
+
+rectangle "RutaSIT Arequipa 2.0 (1200 buses / Multiconcesionaria)\n[Software System]" as sistema {
+    rectangle "PWA Pasajero Offline-First\n[React + Service Worker + IndexedDB]\nGuarda mapa/ETA sin señal (<=200 ms)\ny resincroniza SSE [QA-03]" as pwa #438DD5
+    rectangle "Panel Operador SIT\n[Web SPA]\nConfigura desvíos y rutas GTFS\nen <=2 h sin desplegar código [QA-06]" as panel #438DD5
+    rectangle "API Monolito Modular\n[Python / FastAPI + JWT + SSE]\nOrquesta Consultas, ETA y Alertas;\nvalida claim concesionaria_id [QA-01, QA-02, QA-04]" as api #438DD5
+    database "Caché de ETA\n[Redis 7]\nETA por (paradero, ruta)\ncon TTL de 10 s [QA-01]" as redis #2E6DA4
+    database "Base de Datos Geoespacial\n[PostgreSQL 16 + PostGIS + RLS]\nÍndices compuestos [QA-01], tabla\nultima_posicion_bus [QA-02], RLS por\nconcesionaria [QA-04] y GTFS [QA-06]" as bd #2E6DA4
+}
+
+rectangle "SDKs GPS Concesionarias\n[ConectaAQP / TransCayma]\nTelemetría de 1200 buses" as gps #999999
+rectangle "Proveedor LLM\n[Claude / LLM Local]\nExplicación de retrasos" as llm #999999
+
+pasajero --> pwa : Consulta ETA y alertas\n[HTTPS]
+operador --> panel : Configura desvíos\n[HTTPS]
+pwa --> api : Consulta ETA y stream SSE\n(Last-Event-ID) [QA-01, QA-03]
+panel --> api : Actualiza rutas GTFS y\naudita flota [QA-04, QA-06]
+api --> redis : Lee/escribe ETA cacheado\n(TTL 10 s) [RESP] [QA-01]
+api --> bd : Consulta con índice, RLS y\nLast-Known GPS [SQL] [QA-01..06]
+api --> gps : Consulta GPS con Reintentos +\nCircuit Breaker [HTTPS] [QA-02, QA-07]
+api --> llm : Genera explicación validada\npor Guardrails [HTTPS]
+@enduml
