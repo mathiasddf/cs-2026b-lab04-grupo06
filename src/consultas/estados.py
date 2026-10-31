@@ -94,9 +94,13 @@ EstadoViaje = EstadoViajeBase
 
 # 2. Inyectar comportamientos requeridos por la lógica de Viaje
 def _procesar_ubicacion_default(self, viaje, lectura):
-    # Remueve el primer segmento completado si existe telemática
-    if viaje.segmentos:
-        viaje.segmentos.pop(0)
+    """
+    Procesa una lectura GPS sin eliminar segmentos pendientes.
+
+    La recepción de telemetría no implica que el vehículo
+    haya completado un segmento de su recorrido.
+    """
+    pass
 
 # Añadir propiedades y métodos dinámicos a la clase base
 EstadoViajeBase.es_anomalo = property(lambda self: self.nombre in ["DESVIADO", "DETENIDO"])

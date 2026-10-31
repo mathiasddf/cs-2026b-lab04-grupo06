@@ -1,0 +1,26 @@
+[importlinter]
+root_packages =
+    src
+    fitness
+
+[importlinter:contract:capas]
+name = FF-01 Capas internas del modulo de Consultas sin ciclos hacia el orquestador (ADR-001)
+type = layers
+layers =
+    src.consultas.servicio
+    src.consultas.resiliencia
+    src.consultas.estados | src.consultas.estrategias_eta | src.consultas.eventos | src.consultas.ia
+    src.consultas.proveedores_gps
+    src.consultas.externos
+
+[importlinter:contract:puertos]
+name = FF-02 Dominio puro (estados, estrategias_eta, eventos, resiliencia) no importa SDKs externos (ADR-005)
+type = forbidden
+source_modules =
+    src.consultas.estados
+    src.consultas.estrategias_eta
+    src.consultas.eventos
+    src.consultas.resiliencia
+forbidden_modules =
+    src.consultas.externos
+    src.consultas.antes
