@@ -2,27 +2,34 @@ name: fitness-functions
 
 on:
   push:
-    branches: [ main, "feat/**" ]
+    branches: [main, "feat/**"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   arquitectura:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Instalar dependencias de arquitectura y pruebas
         run: |
           python -m pip install --upgrade pip
-          pip install import-linter pytest matplotlib radon
+          python -m pip install import-linter pytest matplotlib radon
 
       - name: Ejecutar Fitness Functions Estructurales (FF-01 y FF-02)
         run: lint-imports
 
       - name: Ejecutar Fitness Functions de Calidad (FF-03 a FF-06) y Regresion Lab 07
-        run: pytest -v tests/test_fitness.py tests/test_comportamiento.py tests/test_patrones.py
+        run: |
+          python -m pytest -v tests/test_fitness.py tests/test_comportamiento.py tests/test_patrones.py
