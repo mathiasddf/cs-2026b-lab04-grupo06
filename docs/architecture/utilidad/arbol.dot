@@ -1,0 +1,54 @@
+digraph ArbolUtilidadRutaSIT {
+    rankdir=LR;
+    graph [fontname="Arial", fontsize=11, pad="0.3", nodesep="0.25", ranksep="0.55"];
+    node [fontname="Arial", fontsize=10, shape=box, style="rounded,filled", margin="0.15,0.08"];
+    edge [color="#555555", arrowsize=0.7];
+
+    // Raíz
+    raiz [label="Utilidad\nRutaSIT Arequipa 2.0\n(1200 buses / 50k consultas h.p.)", fillcolor="#1B365D", fontcolor="white", penwidth=1.5];
+
+    // Nivel 2: Atributos de calidad
+    rend [label="Rendimiento\nen tiempo real", fillcolor="#A61C1C", fontcolor="white"];
+    disp [label="Disponibilidad\ny resiliencia", fillcolor="#A61C1C", fontcolor="white"];
+    seg  [label="Seguridad\ne integridad", fillcolor="#A61C1C", fontcolor="white"];
+    mod  [label="Modificabilidad", fillcolor="#A61C1C", fontcolor="white"];
+
+    raiz -> rend;
+    raiz -> disp;
+    raiz -> seg;
+    raiz -> mod;
+
+    // Nivel 3: Refinamientos
+    r_lat  [label="Latencia en\nhora punta", fillcolor="#F3D6D6", color="#A61C1C"];
+    r_ing  [label="Ingesta masiva\nde telemetría GPS", fillcolor="#F3D6D6", color="#A61C1C"];
+    d_gps  [label="Caída de SDK GPS\nde concesionaria", fillcolor="#F3D6D6", color="#A61C1C"];
+    d_red  [label="Pasajero con corte\nde red móvil", fillcolor="#F3D6D6", color="#A61C1C"];
+    s_spoof [label="Autenticidad y aislamiento\nde telemetría por operador", fillcolor="#F3D6D6", color="#A61C1C"];
+    m_ruta [label="Nuevas rutas y desvíos\npor obras viales", fillcolor="#F3D6D6", color="#A61C1C"];
+    m_oper [label="Nuevo operador GPS\no algoritmo ETA", fillcolor="#F3D6D6", color="#A61C1C"];
+
+    rend -> r_lat;
+    rend -> r_ing;
+    disp -> d_gps;
+    disp -> d_red;
+    seg  -> s_spoof;
+    mod  -> m_ruta;
+    mod  -> m_oper;
+
+    // Nivel 4: Escenarios de 6 partes resumidos con medida numérica y prioridad (Importancia, Dificultad)
+    qa01 [label="(H,H) QA-01: 50 000 consultas ETA en hora punta (pico 20 req/s)\ncon 1200 buses activos -> p95 de consultar_eta <= 1500 ms", fillcolor="#FFF8DC", color="#B8860B", penwidth=1.5];
+    qa02 [label="(H,H) QA-02: SDK GPS de una concesionaria cae por 15 min en hora punta ->\n0 consultas HTTP 500 y 100% de respuestas con última posición válida + alerta", fillcolor="#FFF8DC", color="#B8860B", penwidth=1.5];
+    qa03 [label="(H,M) QA-03: Pasajero pierde señal 3G/4G en túnel o periferia por 3 min ->\nla app muestra último mapa/ETA en <= 200 ms y resincroniza SSE en <= 5 s", fillcolor="#F8F9FA", color="#666666"];
+    qa04 [label="(H,M) QA-04: Concesionaria A intenta inyectar o leer telemetría de buses de B ->\n100% rechazado con HTTP 403 y 0 registros cruzados en base de datos", fillcolor="#F8F9FA", color="#666666"];
+    qa05 [label="(M,L) QA-05: 1200 buses reportan posición cada 10 s (120 eventos/s) ->\n100% de tramas en tránsito sobre TLS 1.3 (corregido de H,H a M,L)", fillcolor="#EFEFEF", color="#888888"];
+    qa06 [label="(H,M) QA-06: Municipalidad modifica trazado o desvío de corredor por obras ->\nse actualiza en tabla GTFS/PostGIS en <= 2 horas sin desplegar código", fillcolor="#F8F9FA", color="#666666"];
+    qa07 [label="(M,L) QA-07: Se integra una nueva empresa concesionaria GPS al SIT ->\nadaptador registrado en <= 2 días-persona con 0 líneas tocadas en ServicioConsultas", fillcolor="#EFEFEF", color="#888888"];
+
+    r_lat   -> qa01;
+    r_ing   -> qa05;
+    d_gps   -> qa02;
+    d_red   -> qa03;
+    s_spoof -> qa04;
+    m_ruta  -> qa06;
+    m_oper  -> qa07;
+}
