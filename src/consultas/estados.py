@@ -4,7 +4,6 @@ class TransicionInvalidaError(ValueError):
     """Excepción lanzada cuando se intenta una transición de estado no permitida."""
     pass
 
-
 class EstadoViajeBase(ABC):
     """Clase base prohibitiva que rechaza todas las transiciones por defecto."""
     @property
@@ -33,7 +32,12 @@ class EstadoProgramado(EstadoViajeBase):
         return "PROGRAMADO"
 
     def iniciar(self, viaje) -> None:
-        viaje.estado_obj = EstadoEnRuta()
+        viaje.cambiar_a(EstadoEnRuta())
+
+    def procesar_ubicacion(self, viaje, lectura):
+        # Transición automática: Si recibe GPS estando programado, arranca el viaje
+        self.iniciar(viaje)
+        viaje._estado.procesar_ubicacion(viaje, lectura)
 
 
 class EstadoEnRuta(EstadoViajeBase):
@@ -42,15 +46,15 @@ class EstadoEnRuta(EstadoViajeBase):
         return "EN_RUTA"
 
     def desviar(self, viaje, motivo: str) -> None:
-        viaje.estado_obj = EstadoDesviado()
+        viaje.cambiar_a(EstadoDesviado())
         viaje.alerta = motivo
 
     def detener(self, viaje, motivo: str) -> None:
-        viaje.estado_obj = EstadoDetenido()
+        viaje.cambiar_a(EstadoDetenido())
         viaje.alerta = motivo
 
     def finalizar(self, viaje) -> None:
-        viaje.estado_obj = EstadoFinalizado()
+        viaje.cambiar_a(EstadoFinalizado())
 
 
 class EstadoDesviado(EstadoViajeBase):
@@ -59,11 +63,11 @@ class EstadoDesviado(EstadoViajeBase):
         return "DESVIADO"
 
     def reanudar(self, viaje) -> None:
-        viaje.estado_obj = EstadoEnRuta()
+        viaje.cambiar_a(EstadoEnRuta())
         viaje.alerta = None
 
     def finalizar(self, viaje) -> None:
-        viaje.estado_obj = EstadoFinalizado()
+        viaje.cambiar_a(EstadoFinalizado())
 
 
 class EstadoDetenido(EstadoViajeBase):
@@ -72,14 +76,43 @@ class EstadoDetenido(EstadoViajeBase):
         return "DETENIDO"
 
     def reanudar(self, viaje) -> None:
-        viaje.estado_obj = EstadoEnRuta()
+        viaje.cambiar_a(EstadoEnRuta())
         viaje.alerta = None
 
     def finalizar(self, viaje) -> None:
-        viaje.estado_obj = EstadoFinalizado()
+        viaje.cambiar_a(EstadoFinalizado())
 
 
 class EstadoFinalizado(EstadoViajeBase):
     @property
     def nombre(self) -> str:
         return "FINALIZADO"
+
+
+# 1. Crear el alias 'EstadoViaje' que servicio.py intenta importar
+EstadoViaje = EstadoViajeBase
+
+# 2. Inyectar comportamientos requeridos por la lógica de Viaje
+def _procesar_ubicacion_default(self, viaje, lectura):
+    # Remueve el primer segmento completado si existe telemática
+    if viaje.segmentos:
+        viaje.segmentos.pop(0)
+
+# Añadir propiedades y métodos dinámicos a la clase base
+EstadoViajeBase.es_anomalo = property(lambda self: self.nombre in ["DESVIADO", "DETENIDO"])
+EstadoViajeBase.procesar_ubicacion = _procesar_ubicacion_default
+
+# Permitir llamadas de finalización exitosas en los estados válidos
+EstadoEnRuta.finalizar = lambda self, viaje: viaje.cambiar_a(EstadoFinalizado())
+EstadoDesviado.finalizar = lambda self, viaje: viaje.cambiar_a(EstadoFinalizado())
+EstadoDetenido.finalizar = lambda self, viaje: viaje.cambiar_a(EstadoFinalizado())
+EstadoFinalizado.finalizar = lambda self, viaje: None  # Ya llegó al final
+
+# 3. Definir el mapa de estados
+MAPA_ESTADOS_INICIALES = {
+    "PROGRAMADO": EstadoProgramado(),
+    "EN_RUTA": EstadoEnRuta(),
+    "DESVIADO": EstadoDesviado(),
+    "DETENIDO": EstadoDetenido(),
+    "FINALIZADO": EstadoFinalizado()
+}
