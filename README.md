@@ -194,3 +194,36 @@ En el Laboratorio 07 se refactorizó el flujo crítico de consulta de ETA y dete
 - **ADR-005:** [Adopción de patrones de diseño GoF](docs/architecture/adr/005-patrones-de-diseno.md)
 - **Análisis y Métricas:** [Olores detectados (`olores.md`)](docs/design/patrones/olores.md) | [Métricas `radon` y trade-off (`metricas.md`)](docs/design/patrones/metricas.md) | [Bitácora de IA (`bitacora-ia.md`)](docs/design/patrones/bitacora-ia.md)
 - **Diagramas PlantUML:** [Diagrama de Clases Lab 05 actualizado (`clases.puml`)](docs/design/clases.puml) | [Patrones en `docs/design/patrones/`](docs/design/patrones/)
+
+## Diseño de la arquitectura (Lab 08)
+
+En el Laboratorio 08 se evolucionó la arquitectura de RutaSIT Arequipa para responder al escenario de crecimiento de 300 a 1200 buses y 50 000 consultas de tiempo de llegada en hora punta, aplicando Attribute-Driven Design (ADD 3.0) en 3 iteraciones, evaluación ATAM-lite y Fitness Functions automatizadas en integración continua.
+
+### 1. Árbol de Utilidad (docs/architecture/utilidad/arbol.dot)
+![Árbol de utilidad](docs/architecture/utilidad/arbol.png)
+- Archivo fuente Graphviz: `docs/architecture/utilidad/arbol.dot`
+
+### 2. Resumen de Iteraciones de ADD 3.0
+
+| Iteración | Escenario Prioritario | Táctica(s) Arquitectónica(s) Aplicada(s) | Evidencia Cuantitativa / Verificación | ¿Cumple el escenario? |
+| :--- | :--- | :--- | :--- | :---: |
+| **Iteración 1 (`iteracion-1.md`)** | **QA-01 (H,H):** 50 000 consultas ETA/h (pico 20 req/s) con 1200 buses $\rightarrow$ p95 $\le$ 1500 ms | Optimizar consultas (Índice compuesto `(bus_id, reportado_en DESC)` en PostGIS) + Caché (Redis por `(paradero, ruta)` con TTL = 10 s) | Simulación de colas M/G/c (`fitness/rendimiento.py`) y test `test_ff03`: baja el p95 de 18 078.7 ms a 79.9 ms (141.7 ms con caché fría). | **SÍ** ($\le$ 1500 ms) |
+| **Iteración 2 (`iteracion-2.md`)** | **QA-02 (H,H) y QA-03 (H,M):** Caída de SDK GPS por 15 min $\rightarrow$ 0 errores HTTP 500; corte de red móvil del pasajero por 3 min | Reintentos + Circuit Breaker + Degradación elegante (`ConCircuitBreakerGPS` + tabla `ultima_posicion_bus` en PostgreSQL) + Offline-first en PWA (IndexedDB + SSE Last-Event-ID) | Simulación Monte Carlo (`fitness/disponibilidad.py`) y tests `test_ff04`, `test_ff05`: 0 consultas perdidas (100% éxito) y reducción de 1200 a 32 llamadas al proveedor caído. | **SÍ** (0 errores) |
+| **Iteración 3 (`iteracion-3.md`)** | **QA-04 (H,M) y QA-06 (H,M):** 0 fugas de telemetría entre concesionarias; cambios de rutas/desvíos en $\le$ 2 h sin desplegar código | Limitar acceso (Columna `concesionaria_id` + Row-Level Security (RLS) en PostgreSQL + claim en JWT) + Diferir el enlace (Geometrías GTFS en PostGIS) | Comparación de alternativas de multitenencia y fitness function `test_ff06_aislamiento_multiconcesionaria_cero_fugas` en `tests/test_fitness.py`. | **SÍ** (0 filas cruzadas y 0 despliegues) |
+
+### 3. Registros de Decisión de Arquitectura (ADR), Modelo C4 y Evaluación ATAM-lite
+
+- **ADRs producidos en el Laboratorio 08:**
+  - `ADR-006`: Índice geoespacial compuesto y caché Redis con TTL de 10 s para cálculo de ETA
+  - `ADR-007`: Resiliencia ante caída de proveedores GPS con Circuit Breaker, Last-Known en PostgreSQL y PWA Offline-first
+  - `ADR-008`: Aislamiento multiconcesionaria con JWT + Row-Level Security (RLS) y configuración de rutas en PostGIS
+- **Modelo C4 actualizado con trazabilidad [QA-xx]:**
+  - Workspace Structurizr DSL (`docs/architecture/c4/workspace.dsl`)
+  - Diagrama de Contenedores C4 PlantUML (`docs/architecture/c4/contenedores_rutasit2.puml`)
+- **Evaluación ATAM-lite, Matriz de Riesgos y Bitácora de IA:**
+  - Informe de Evaluación ATAM-lite y Matriz de Riesgos (`docs/architecture/atam-lite.md`)
+  - Bitácora de Uso Crítico de IA (`docs/architecture/bitacora-ia.md`)
+- **Fitness Functions Automatizadas:**
+  - Contratos estructurales (FF-01 y FF-02): `.importlinter`
+  - Pruebas de atributos de calidad (FF-03 a FF-06): `tests/test_fitness.py`
+  - Workflow de Integración Continua: `.github/workflows/fitness.yml`
