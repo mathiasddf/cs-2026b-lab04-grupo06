@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. Cuando un bus se desvía de su ruta o se detiene por más de 60 segundos, el inspector recibe una alerta automática en pantalla.
+2. El servicio de monitoreo consulta la tabla de rutas en la base de datos y llama al endpoint de notificaciones en tiempo real.
+3. La alerta se envía utilizando la API de mensajería interna del sistema.
+4. La interfaz debe mostrar la alerta de forma clara y rápida.
