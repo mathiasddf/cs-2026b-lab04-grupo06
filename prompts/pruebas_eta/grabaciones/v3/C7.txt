@@ -1,0 +1,10 @@
+{
+  "caso_id": "C7",
+  "es_testeable": false,
+  "observaciones": [
+    "Contratar servidores dedicados en AWS y gestionar facturación mensual en dólares es una tarea administrativa y de infraestructura externa, no un comportamiento unitario de cálculo de ETA.",
+    "¿Cuál es la regla de negocio verificable sobre distancia_km, velocidad_kmh o EstrategiaETA que se desea probar con pytest?"
+  ],
+  "pruebas": [],
+  "codigo_pytest": ""
+}

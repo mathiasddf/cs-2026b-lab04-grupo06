@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["caso_id", "es_testeable", "observaciones", "pruebas", "codigo_pytest"],
+  "additionalProperties": false,
+  "properties": {
+    "caso_id": {
+      "type": "string",
+      "minLength": 2
+    },
+    "es_testeable": {
+      "type": "boolean"
+    },
+    "observaciones": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 5
+      }
+    },
+    "pruebas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["nombre_funcion", "tipo", "descripcion"],
+        "additionalProperties": false,
+        "properties": {
+          "nombre_funcion": {
+            "type": "string",
+            "pattern": "^test_[a-z0-9_]+$"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": ["exito", "error", "borde"]
+          },
+          "descripcion": {
+            "type": "string",
+            "minLength": 5
+          }
+        }
+      }
+    },
+    "codigo_pytest": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "caso_id": "C1",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_eta_flujo_libre_distancia_normal",
+      "tipo": "exito",
+      "descripcion": "Verifica que EstrategiaFlujoLibre y calcular_minutos retornen 12.0 minutos para 6.0 km a 30.0 km/h"
+    },
+    {
+      "nombre_funcion": "test_eta_flujo_libre_distancia_corta",
+      "tipo": "borde",
+      "descripcion": "Verifica el comportamiento de borde con distancia corta de 0.5 km a 30.0 km/h"
+    }
+  ],
+  "codigo_pytest": "import pytest\nfrom src.consultas.estrategias_eta import EstrategiaETA\n\nclass EstrategiaFlujoLibre(EstrategiaETA):\n    def calcular(self, distancia_km: float, velocidad_kmh: float) -> float:\n        vel_efectiva = max(velocidad_kmh, 15.0)\n        return round((distancia_km / vel_efectiva) * 60.0, 2)\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    return EstrategiaFlujoLibre().calcular(distancia_km, velocidad_kmh)\n\ndef test_eta_flujo_libre_distancia_normal():\n    estrategia = EstrategiaFlujoLibre()\n    eta = estrategia.calcular(6.0, 30.0)\n    assert eta == pytest.approx(12.0)\n    assert calcular_minutos(6.0, 30.0) == pytest.approx(12.0)\n\ndef test_eta_flujo_libre_distancia_corta():\n    eta_corto = calcular_minutos(0.5, 30.0)\n    assert eta_corto == pytest.approx(1.0)\n    assert eta_corto > 0.0\n"
+}

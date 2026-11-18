@@ -1,0 +1,13 @@
+{
+  "caso_id": "C6",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_algoritmo_agradable_y_moderno",
+      "tipo": "exito",
+      "descripcion": "Valida que el cálculo de ETA sea agradable para el ciudadano"
+    }
+  ],
+  "codigo_pytest": "import pytest\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    return (distancia_km / max(velocidad_kmh, 15.0)) * 60.0\n\ndef test_algoritmo_agradable_y_moderno():\n    eta = calcular_minutos(3.0, 30.0)\n    assert eta > 0\n    assert eta < 60\n    assert isinstance(eta, float)\n"
+}

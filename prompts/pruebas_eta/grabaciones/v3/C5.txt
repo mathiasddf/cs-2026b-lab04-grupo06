@@ -1,0 +1,18 @@
+{
+  "caso_id": "C5",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_eta_velocidad_cero_y_negativa_sin_zero_division",
+      "tipo": "borde",
+      "descripcion": "Verifica que velocidad_kmh <= 0 aplique el piso seguro de 15.0 km/h sin lanzar ZeroDivisionError"
+    },
+    {
+      "nombre_funcion": "test_eta_distancia_cero_y_negativa",
+      "tipo": "error",
+      "descripcion": "Verifica retorno 0.0 cuando distancia_km == 0 y ValueError cuando distancia_km < 0"
+    }
+  ],
+  "codigo_pytest": "import pytest\nfrom src.consultas.estrategias_eta import EstrategiaETA\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    if distancia_km < 0:\n        raise ValueError(\"La distancia no puede ser negativa\")\n    if distancia_km == 0:\n        return 0.0\n    vel_efectiva = max(velocidad_kmh, 15.0)\n    return round((distancia_km / vel_efectiva) * 60.0, 2)\n\ndef test_eta_velocidad_cero_y_negativa_sin_zero_division():\n    eta_cero = calcular_minutos(3.0, 0.0)\n    eta_neg = calcular_minutos(3.0, -5.0)\n    assert eta_cero == pytest.approx(12.0)\n    assert eta_neg == pytest.approx(12.0)\n\ndef test_eta_distancia_cero_y_negativa():\n    assert calcular_minutos(0.0, 25.0) == 0.0\n    with pytest.raises(ValueError):\n        calcular_minutos(-2.0, 25.0)\n"
+}

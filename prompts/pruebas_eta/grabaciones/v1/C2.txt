@@ -1,0 +1,7 @@
+Puedes probar la hora punta en Av. Ejército con el siguiente código:
+
+```python
+def test_eta_hora_punta():
+    eta = (5.0 / 25.0) * 60.0 * 1.35
+    assert eta > 12.0
+```

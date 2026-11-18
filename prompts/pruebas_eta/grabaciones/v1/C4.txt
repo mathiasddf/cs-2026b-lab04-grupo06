@@ -1,0 +1,7 @@
+Prueba unitaria básica para la penalización por desvío:
+
+```python
+def test_penalizacion_anomalia():
+    eta = 12.0 + 8.0
+    assert eta == 20.0
+```

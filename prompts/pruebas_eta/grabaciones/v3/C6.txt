@@ -1,0 +1,10 @@
+{
+  "caso_id": "C6",
+  "es_testeable": false,
+  "observaciones": [
+    "El criterio 'mágico, agradable y moderno' es subjetivo y no define entradas, fórmulas ni umbrales numéricos verificables para calcular_minutos o EstrategiaETA.",
+    "¿Qué métrica determinista de tiempo estimado de llegada (por ejemplo tolerancia en minutos o factor de ajuste) debe validarse en las pruebas unitarias?"
+  ],
+  "pruebas": [],
+  "codigo_pytest": ""
+}

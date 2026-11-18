@@ -1,0 +1,18 @@
+{
+  "caso_id": "C2",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_hora_punta_av_ejercito",
+      "tipo": "exito",
+      "descripcion": "Verifica factor de congestión 1.35x en Av. Ejército"
+    },
+    {
+      "nombre_funcion": "test_hora_punta_supera_flujo_libre",
+      "tipo": "borde",
+      "descripcion": "Verifica que hora punta supere al flujo libre en 35%"
+    }
+  ],
+  "codigo_pytest": "import pytest\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float, factor: float = 1.0) -> float:\n    vel_efectiva = max(velocidad_kmh, 15.0)\n    return round((distancia_km / vel_efectiva) * 60.0 * factor, 2)\n\ndef test_hora_punta_av_ejercito():\n    eta_punta = calcular_minutos(5.0, 25.0, factor=1.35)\n    assert eta_punta == pytest.approx(16.2)\n    assert eta_punta > 12.0\n\ndef test_hora_punta_supera_flujo_libre():\n    eta_libre = calcular_minutos(4.0, 20.0, factor=1.0)\n    eta_punta = calcular_minutos(4.0, 20.0, factor=1.35)\n    assert eta_punta == pytest.approx(eta_libre * 1.35)\n"
+}

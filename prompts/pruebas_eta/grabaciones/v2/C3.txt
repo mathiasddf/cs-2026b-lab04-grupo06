@@ -1,0 +1,18 @@
+{
+  "caso_id": "C3",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_clima_lluvia_moderada",
+      "tipo": "exito",
+      "descripcion": "Verifica el cálculo de ETA con factor 1.5x bajo lluvia"
+    },
+    {
+      "nombre_funcion": "test_clima_lluvia_velocidad_reducida",
+      "tipo": "borde",
+      "descripcion": "Verifica el piso de velocidad de 15.0 km/h con lluvia intensa"
+    }
+  ],
+  "codigo_pytest": "import pytest\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float, factor_lluvia: float = 1.5) -> float:\n    vel_efectiva = max(velocidad_kmh, 15.0)\n    return round((distancia_km / vel_efectiva) * 60.0 * factor_lluvia, 2)\n\ndef test_clima_lluvia_moderada():\n    eta = calcular_minutos(4.0, 24.0, factor_lluvia=1.5)\n    assert eta == pytest.approx(15.0)\n    assert eta > 10.0\n\ndef test_clima_lluvia_velocidad_reducida():\n    eta = calcular_minutos(3.0, 10.0, factor_lluvia=1.5)\n    assert eta == pytest.approx(18.0)\n"
+}

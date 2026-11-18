@@ -1,0 +1,18 @@
+{
+  "caso_id": "C3",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_eta_clima_lluvia_moderada",
+      "tipo": "exito",
+      "descripcion": "Verifica que EstrategiaClimaLluvia aplique factor 1.5x bajo lluvia en Paucarpata (4.0 km a 24.0 km/h -> 15.0 min)"
+    },
+    {
+      "nombre_funcion": "test_eta_clima_lluvia_velocidad_reducida",
+      "tipo": "borde",
+      "descripcion": "Verifica el piso mínimo efectivo de velocidad de 15.0 km/h con lluvia intensa (3.0 km a 10.0 km/h -> 18.0 min)"
+    }
+  ],
+  "codigo_pytest": "import pytest\nfrom src.consultas.estrategias_eta import EstrategiaETA\n\nclass EstrategiaClimaLluvia(EstrategiaETA):\n    FACTOR_LLUVIA = 1.5\n\n    def calcular(self, distancia_km: float, velocidad_kmh: float) -> float:\n        vel_efectiva = max(velocidad_kmh, 15.0)\n        return round((distancia_km / vel_efectiva) * 60.0 * self.FACTOR_LLUVIA, 2)\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    return EstrategiaClimaLluvia().calcular(distancia_km, velocidad_kmh)\n\ndef test_eta_clima_lluvia_moderada():\n    eta = calcular_minutos(4.0, 24.0)\n    assert eta == pytest.approx(15.0)\n    assert eta > 10.0\n\ndef test_eta_clima_lluvia_velocidad_reducida():\n    eta = EstrategiaClimaLluvia().calcular(3.0, 10.0)\n    assert eta == pytest.approx(18.0)\n    assert eta == pytest.approx((3.0 / 15.0) * 60.0 * 1.5)\n"
+}
