@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. El usuario abre la aplicación y selecciona su paradero para ver el mapa con los buses cercanos y su tiempo estimado de llegada.
+2. El frontend consulta el endpoint GET /api/v1/eta mediante la API de ubicación y guarda el historial en la base de datos PostgreSQL.
+3. Los datos de posición se actualizan en la tabla de viajes mediante WebSocket.
+4. El sistema debe ser rápido y fácil de usar para el pasajero.

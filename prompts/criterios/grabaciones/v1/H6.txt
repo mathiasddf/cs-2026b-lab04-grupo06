@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. La aplicación RutaSIT debe cargar todas las pantallas en menos de un segundo y ser muy rápida, moderna, intuitiva y fácil de usar en toda Arequipa.
+2. El diseño en React debe contar con botones claros y consumir el endpoint principal sin demoras.
+3. Los datos de usuario se almacenan en la base de datos y se consultan mediante la API de perfil.
+4. Todos los pasajeros deben poder navegar cómodamente desde el primer uso.

@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. El supervisor ingresa al módulo de reportes para visualizar el historial diario de viajes y retrasos de los buses de su empresa.
+2. El sistema consulta la tabla historial_viajes en la base de datos PostgreSQL mediante un endpoint filtrado por identificador de empresa.
+3. La interfaz React solicita los datos a la API de reportes y los muestra en una grilla paginada.
+4. Los reportes deben generarse rápidamente para facilitar la evaluación de frecuencias.

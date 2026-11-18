@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. Cuando exista una demora, el pasajero recibe un aviso en su celular y lo visualiza en la pantalla del paradero.
+2. El sistema lee los eventos desde la tabla de alertas en la base de datos y los publica a través de un endpoint hacia la pantalla del paradero.
+3. La aplicación móvil consume la API de voz y texto para reproducir el mensaje al usuario.
+4. El aviso debe mostrarse de forma clara y amigable.

@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. El sistema recibe las posiciones GPS enviadas por las concesionarias Conecta y TransCayma y las muestra en el mapa.
+2. El backend expone un endpoint REST para recibir los datos y los inserta en la tabla gps_posiciones de la base de datos PostgreSQL.
+3. Se utiliza una API de normalización interna y caché Redis para unificar las tramas de ambos proveedores.
+4. El mapa debe cargar todas las unidades de manera fluida.

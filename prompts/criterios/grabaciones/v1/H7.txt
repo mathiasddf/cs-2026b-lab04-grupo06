@@ -1,0 +1,5 @@
+Criterios de aceptación:
+1. La migración de las tablas de telemetría GPS hacia la nueva base de datos PostgreSQL particionada se completa sin pérdida de registros.
+2. Se crean los índices B-Tree sobre la tabla de telemetría y se configura el caché Redis para acelerar las lecturas.
+3. El endpoint de consultas verifica la conexión con la API de base de datos y responde correctamente.
+4. El sistema mantiene un alto rendimiento después de la migración.

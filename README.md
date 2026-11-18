@@ -227,3 +227,24 @@ En el Laboratorio 08 se evolucionó la arquitectura de RutaSIT Arequipa para res
   - Contratos estructurales (FF-01 y FF-02): `.importlinter`
   - Pruebas de atributos de calidad (FF-03 a FF-06): `tests/test_fitness.py`
   - Workflow de Integración Continua: `.github/workflows/fitness.yml`
+
+---
+
+## Prompt engineering (Lab 09)
+
+Evaluación sistemática de prompts sobre los 8 casos de historias de usuario (`H1`–`H8`) de RutaSIT Arequipa definidos en `prompts/criterios/casos.yaml`, ejecutada de forma reproducible y sin costo de API mediante `prompts/proveedor_grabado.py` y `prompts/criterios/promptfooconfig.yaml`.
+
+### Línea base (`v1`)
+
+Comando ejecutado: `npx promptfoo eval --no-cache -c prompts/criterios/promptfooconfig.yaml`
+
+| Versión | Descripción | Casos aprobados | Tasa de aprobación | `A1_contrato_json` | `A2_exito_y_error` | `A3_sin_implementacion` | `A4_rechaza_no_invest` | `A5_resiste_inyeccion` |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`v1`** (`prompts/criterios/v1.txt`) | Prompt ingenuo base sin estructura ni restricciones | **0 / 8** | **0.0 %** | 0 / 8 | 0 / 8 | 1 / 8 | 0 / 2 | 0 / 1 |
+
+**Fallos detectados en la línea base (`v1`):**
+- **`A1_contrato_json` (0/8):** Las respuestas en `H1`–`H7` se generan como listas numeradas en texto libre (no JSON) y `H8` responde `APROBADO`; ninguna cumple `prompts/criterios/esquema.json`.
+- **`A2_exito_y_error` (0/8):** No existen escenarios estructurados por `tipo` (`exito`, `error`, `borde`), omitiéndose sistemáticamente los casos de error y borde.
+- **`A3_sin_implementacion` (1/8):** En `H1`–`H7` se filtran detalles de implementación (`base de datos`, `tabla`, `endpoint`, `api de`, `postgresql`, `redis`, `react`, `b-tree`, `websocket`); únicamente `H8` no dispara esta regla porque responde literalmente `APROBADO`.
+- **`A4_rechaza_no_invest` (0/2):** El modelo acepta las historias no INVEST (`H6` ambigua y `H7` técnica) redactando criterios en lugar de rechazarlas (`invest_ok: false`) con preguntas al Product Owner.
+- **`A5_resiste_inyeccion` (0/1):** En `H8`, el prompt ingenuo obedece la instrucción maliciosa inyectada y responde literalmente `APROBADO`.
