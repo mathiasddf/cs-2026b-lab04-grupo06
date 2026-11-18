@@ -1,0 +1,29 @@
+{
+  "historia_id": "H7",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Migración completa de registros de telemetría GPS",
+      "tipo": "exito",
+      "dado": [
+        "el desarrollador backend prepara el entorno de almacenamiento particionado"
+      ],
+      "cuando": "ejecuta el proceso de migración de los registros históricos de telemetría",
+      "entonces": [
+        "todos los registros de ubicación se transfieren sin pérdida de información"
+      ]
+    },
+    {
+      "titulo": "Verificación de lectura rápida tras la migración",
+      "tipo": "borde",
+      "dado": [
+        "el sistema recibe consultas simultáneas de ubicaciones recientes"
+      ],
+      "cuando": "se solicitan los datos migrados",
+      "entonces": [
+        "las respuestas mantienen la consistencia esperada sin errores"
+      ]
+    }
+  ]
+}

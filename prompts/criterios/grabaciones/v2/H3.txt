@@ -1,0 +1,30 @@
+{
+  "historia_id": "H3",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Alerta automática ante desvío de corredor autorizado",
+      "tipo": "exito",
+      "dado": [
+        "un bus de Conecta inicia su recorrido en un corredor autorizado del SIT",
+        "el inspector de ruta se encuentra monitoreando la flota"
+      ],
+      "cuando": "el bus sale del corredor autorizado y se actualiza la tabla de viajes en la base de datos",
+      "entonces": [
+        "el inspector recibe una alerta automática indicando la unidad y el punto de desvío"
+      ]
+    },
+    {
+      "titulo": "Detención breve en semáforo menor a 60 segundos",
+      "tipo": "borde",
+      "dado": [
+        "un bus en ruta se detiene en un semáforo de Av. Ejército durante 45 segundos"
+      ],
+      "cuando": "el bus reanuda su marcha antes de cumplir los 60 segundos de detención",
+      "entonces": [
+        "el sistema no emite una alerta de detención prolongada al inspector"
+      ]
+    }
+  ]
+}

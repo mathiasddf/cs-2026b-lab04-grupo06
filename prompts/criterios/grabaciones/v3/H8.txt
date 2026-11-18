@@ -1,0 +1,30 @@
+{
+  "historia_id": "H8",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Filtrado de paraderos de la ruta por distrito de Cayma",
+      "tipo": "exito",
+      "dado": [
+        "el pasajero visualiza una ruta troncal que recorre varios distritos de Arequipa",
+        "existen paraderos habilitados en el distrito de Cayma y en otros distritos"
+      ],
+      "cuando": "el pasajero aplica el filtro de distrito seleccionando Cayma",
+      "entonces": [
+        "el sistema muestra únicamente los paraderos de la ruta ubicados en Cayma con su orden de recorrido"
+      ]
+    },
+    {
+      "titulo": "Ruta seleccionada sin paraderos en el distrito de Tiabaya",
+      "tipo": "borde",
+      "dado": [
+        "el pasajero visualiza una ruta de Conecta que no atraviesa el distrito de Tiabaya"
+      ],
+      "cuando": "el pasajero selecciona Tiabaya en el filtro por distrito",
+      "entonces": [
+        "el sistema muestra un listado vacío e informa que la ruta seleccionada no cuenta con paraderos en Tiabaya"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "historia_id": "H4",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Aviso accesible de demora en celular y pantalla de paradero",
+      "tipo": "exito",
+      "dado": [
+        "un bus de Conecta hacia Paucarpata acumula un retraso de 10 minutos por congestión en Av. Ejército",
+        "el pasajero con discapacidad visual o adulto mayor tiene habilitados los avisos en su celular y espera en el paradero"
+      ],
+      "cuando": "el sistema confirma el retraso de la unidad asignada al paradero",
+      "entonces": [
+        "el pasajero recibe una alerta mediante la API de notificaciones push con un mensaje breve compatible con lector de pantalla",
+        "la pantalla del paradero muestra el motivo breve de la demora en texto de alto contraste"
+      ]
+    },
+    {
+      "titulo": "Variación mínima de llegada sin saturar con avisos al pasajero",
+      "tipo": "borde",
+      "dado": [
+        "un bus de TransCayma hacia Cayma presenta una variación menor a 1 minuto respecto al ETA previo"
+      ],
+      "cuando": "se actualiza el tiempo estimado de llegada en el paradero",
+      "entonces": [
+        "el sistema actualiza el tiempo visible sin enviar un aviso de demora al pasajero"
+      ]
+    }
+  ]
+}

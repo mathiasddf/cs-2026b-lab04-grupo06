@@ -1,0 +1,31 @@
+{
+  "historia_id": "H2",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Visualización unificada de flotas Conecta y TransCayma",
+      "tipo": "exito",
+      "dado": [
+        "el operador de monitoreo accede al mapa de supervisión del SIT Arequipa",
+        "los buses de Conecta y TransCayma emiten su posición GPS cada 10 segundos"
+      ],
+      "cuando": "llegan reportes de ubicación de ambas concesionarias",
+      "entonces": [
+        "el mapa muestra todas las unidades con un formato visual uniforme sin importar su concesionaria de origen"
+      ]
+    },
+    {
+      "titulo": "Rechazo de reporte GPS con coordenadas inválidas o trama incompleta",
+      "tipo": "error",
+      "dado": [
+        "una unidad de TransCayma envía un reporte sin latitud válida para el área de Arequipa"
+      ],
+      "cuando": "el sistema procesa el reporte recibido",
+      "entonces": [
+        "el sistema descarta el reporte inválido sin alterar las unidades visibles en el mapa",
+        "se registra la incidencia de señal para el operador de monitoreo"
+      ]
+    }
+  ]
+}
