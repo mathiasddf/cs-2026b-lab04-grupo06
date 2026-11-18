@@ -1,0 +1,7 @@
+Puedes validar la contratación en AWS con el siguiente script de prueba:
+
+```python
+def test_servidores_aws():
+    proveedor = "AWS"
+    assert proveedor == "AWS"
+```

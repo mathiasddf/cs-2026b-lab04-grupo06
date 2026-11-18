@@ -1,0 +1,7 @@
+Aquí tienes un test para verificar que el algoritmo sea moderno y agradable:
+
+```python
+def test_algoritmo_moderno():
+    experiencia = "agradable"
+    assert experiencia == "agradable"
+```

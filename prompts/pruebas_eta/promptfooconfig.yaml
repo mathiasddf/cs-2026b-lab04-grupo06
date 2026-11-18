@@ -1,0 +1,139 @@
+description: "Evaluacion de generacion de pruebas pytest para ETA (Tarea B) - RutaSIT Arequipa"
+
+prompts:
+  - "file://v1.txt"
+  - "file://v2.txt"
+  - "file://v3.txt"
+
+providers:
+  - id: "file://../proveedor_grabado.py"
+    label: "asistente-grabado"
+
+defaultTest:
+  assert:
+    - type: is-json
+      value: file://esquema.json
+      metric: B1_contrato_json
+
+    - type: javascript
+      metric: B2_compila_y_3_asserts
+      value: |
+        let d;
+        try {
+          d = JSON.parse(output);
+        } catch (e) {
+          return false;
+        }
+        if (!d || typeof d !== 'object') return false;
+        if (d.es_testeable === false) return true;
+        if (d.es_testeable !== true || typeof d.codigo_pytest !== 'string') return false;
+
+        const code = d.codigo_pytest;
+        if (!code.trim()) return false;
+        if (code.includes('```')) return false;
+        if (!/(^|\n)\s*def\s+test_[a-zA-Z0-9_]*\s*\(/.test(code)) return false;
+
+        const asserts = code.match(/(^|\n)\s*assert\s+/g) || [];
+        if (asserts.length < 3) return false;
+
+        // Verificar sintaxis básica de Python: balanceo de (), [], {}, comillas cerradas y encabezados def validos
+        const stack = [];
+        const pairs = { ')': '(', ']': '[', '}': '{' };
+        let i = 0;
+        let inComment = false;
+        let quote = null;
+        while (i < code.length) {
+          const ch = code[i];
+          if (inComment) {
+            if (ch === '\n') inComment = false;
+            i++;
+            continue;
+          }
+          if (quote) {
+            if (ch === '\\') {
+              i += 2;
+              continue;
+            }
+            if (quote.length === 3) {
+              if (code.slice(i, i + 3) === quote) {
+                quote = null;
+                i += 3;
+                continue;
+              }
+            } else {
+              if (ch === '\n') return false;
+              if (ch === quote) {
+                quote = null;
+                i++;
+                continue;
+              }
+            }
+            i++;
+            continue;
+          }
+          if (ch === '#') {
+            inComment = true;
+            i++;
+            continue;
+          }
+          if (code.slice(i, i + 3) === '"""' || code.slice(i, i + 3) === "'''") {
+            quote = code.slice(i, i + 3);
+            i += 3;
+            continue;
+          }
+          if (ch === '"' || ch === "'") {
+            quote = ch;
+            i++;
+            continue;
+          }
+          if (ch === '(' || ch === '[' || ch === '{') {
+            stack.push(ch);
+          } else if (ch === ')' || ch === ']' || ch === '}') {
+            if (stack.length === 0 || stack.pop() !== pairs[ch]) return false;
+          }
+          i++;
+        }
+        if (quote !== null || stack.length !== 0) return false;
+
+        // Verificar que las definiciones def test_... terminen en ':'
+        const defLines = code.match(/(^|\n)\s*def\s+[^\n]+/g) || [];
+        for (const line of defLines) {
+          const clean = line.replace(/#.*$/, '').trim();
+          if (!clean.endsWith(':')) return false;
+        }
+        return true;
+
+    - type: javascript
+      metric: B3_dominio_eta_limpio
+      value: |
+        let d;
+        try {
+          d = JSON.parse(output);
+        } catch (e) {
+          return false;
+        }
+        if (!d || typeof d !== 'object') return false;
+        if (d.es_testeable === false) return true;
+        if (d.es_testeable !== true || typeof d.codigo_pytest !== 'string') return false;
+
+        const bajo = d.codigo_pytest.toLowerCase();
+        const usaPytest = bajo.includes('pytest');
+        const dominio = [
+          'calcular_minutos',
+          'distancia',
+          'velocidad',
+          'estrategiaeta',
+          'estrategiaflujolibre',
+          'estrategiahorapunta',
+          'estrategiaclimalluvia',
+          'etaflujolibre',
+          'etahorapunta',
+          'etaclimalluvia'
+        ];
+        const usaDominio = dominio.some(term => bajo.includes(term));
+        const prohibidas = ['os.system', 'subprocess', 'eval(', 'unittest.testcase', 'selenium'];
+        const sinProhibidas = !prohibidas.some(p => bajo.includes(p));
+
+        return usaPytest && usaDominio && sinProhibidas;
+
+tests: file://casos.yaml

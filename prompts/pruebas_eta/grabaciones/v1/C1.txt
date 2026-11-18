@@ -1,0 +1,7 @@
+Aquí tienes una prueba básica en Python para el cálculo de flujo libre:
+
+```python
+def test_eta_flujo_libre():
+    eta = (6.0 / 30.0) * 60.0
+    assert eta == 12.0
+```

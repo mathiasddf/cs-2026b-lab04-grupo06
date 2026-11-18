@@ -232,9 +232,11 @@ En el Laboratorio 08 se evolucionó la arquitectura de RutaSIT Arequipa para res
 
 ## Prompt engineering (Lab 09)
 
+### Tarea A: Criterios de aceptación INVEST (`prompts/criterios/`)
+
 Evaluación sistemática de prompts sobre los 8 casos de historias de usuario (`H1`–`H8`) de RutaSIT Arequipa definidos en `prompts/criterios/casos.yaml`, ejecutada de forma reproducible y sin costo de API mediante `prompts/proveedor_grabado.py` y `prompts/criterios/promptfooconfig.yaml`.
 
-### Evolución de versiones (`v1` $\rightarrow$ `v2` $\rightarrow$ `v3`)
+#### Evolución de versiones (`v1` $\rightarrow$ `v2` $\rightarrow$ `v3`)
 
 Comando ejecutado: `npx promptfoo eval --no-cache -c prompts/criterios/promptfooconfig.yaml`
 
@@ -244,7 +246,7 @@ Comando ejecutado: `npx promptfoo eval --no-cache -c prompts/criterios/promptfoo
 | **`v2`** (`prompts/criterios/v2.txt`) | Agrega `# ROL`, `# CONTEXTO` de RutaSIT y `# FORMATO DE SALIDA` JSON básico | **2 / 8** | **25.0 %** | 6 / 8 | 5 / 8 | 7 / 8 | 0 / 2 | 0 / 1 |
 | **`v3`** (`prompts/criterios/v3.txt`) | 7 elementos de anatomía del prompt, patrones INVEST/Flipped/Few-shot y defensa contra inyección | **7 / 8** | **87.5 %** | 8 / 8 | 8 / 8 | 7 / 8 | 2 / 2 | 1 / 1 |
 
-### Análisis de iteraciones
+#### Análisis de iteraciones (Tarea A)
 
 1. **Línea base (`v1` — 0/8, 0.0 %):**
    - **`A1_contrato_json` (0/8):** Las respuestas en `H1`–`H7` se generan como listas numeradas en texto libre (no JSON) y `H8` responde `APROBADO`; ninguna cumple `prompts/criterios/esquema.json`.
@@ -261,3 +263,35 @@ Comando ejecutado: `npx promptfoo eval --no-cache -c prompts/criterios/promptfoo
    - **Elementos y patrones agregados:** Incorpora explícitamente los 7 elementos de la anatomía de un prompt (`# ROL`, `# CONTEXTO`, `# TAREA` paso a paso 1–2–3, `# RESTRICCIONES`, `# EJEMPLO` few-shot del dominio RutaSIT, `# FORMATO DE SALIDA` exigiendo JSON puro sin bloques Markdown, y `# DATOS` delimitados con `<historia id="{{id}}">{{historia}}</historia>`). Aplica los patrones **Persona**, **Cognitive Verifier** (evaluar INVEST antes de escribir escenarios), **Flipped Interaction** (1 a 3 preguntas al Product Owner cuando `invest_ok = false`), **Template** y **Few-shot**, además de la defensa explícita contra inyección de prompts tratando `<historia>...</historia>` únicamente como dato.
    - **Verificación de evaluadores — corrección de falso positivo en `A3_sin_implementacion` (`H7`):** En `H7` (historia técnica no INVEST), la segunda pregunta válida al Product Owner consulta `"¿Qué necesidad del operador o pasajero se ve afectada por el rendimiento actual de la base de datos?"`. Como `A3_sin_implementacion` en `prompts/criterios/promptfooconfig.yaml` inspecciona exclusivamente `JSON.parse(output).escenarios` (vacío `[]` cuando `invest_ok = false`), no se produce un falso positivo sobre `preguntas` y `H7` aprueba correctamente.
    - **Hipótesis del único fallo restante (`H4` $\rightarrow$ `v3.1` en E5):** En `v3`, `H4` cumple `A1` y `A2`, pero falla únicamente `A3_sin_implementacion` porque uno de sus escenarios indica `"el pasajero recibe una alerta mediante la API de notificaciones push"` (contiene `"api de"`). La hipótesis es que, cuando la historia alude a canales como el celular del pasajero, el modelo tiende a nombrar el mecanismo técnico de integración (`"API de ..."` o servicios externos como WhatsApp/Firebase) en lugar del efecto observable para el usuario. Esto se abordará en `v3.1.txt` (junto con el *Red Teaming* de E5) reforzando la prohibición y agregando contraejemplos sobre canales de notificación.
+
+---
+
+### Tarea B: Generación de pruebas `pytest` para ETA (`prompts/pruebas_eta/`)
+
+Evaluación encadenada (**Tarea A $\rightarrow$ Tarea B**) sobre 8 casos (`C1`–`C8`) definidos en `prompts/pruebas_eta/casos.yaml`, donde cada entrada combina escenarios Gherkin en JSON (salida de la Tarea A) con el contrato de cálculo de tiempo de llegada de RutaSIT (`calcular_minutos(distancia_km, velocidad_kmh)` y `EstrategiaETA` de `src/consultas/estrategias_eta.py`). La aserción clave (`B2_compila_y_3_asserts`) verifica que el código generado compile sin errores de sintaxis y contenga **3 o más sentencias `assert`**.
+
+#### Evolución de versiones (`v1` $\rightarrow$ `v2` $\rightarrow$ `v3`)
+
+Comando ejecutado: `npx promptfoo eval --no-cache -c prompts/pruebas_eta/promptfooconfig.yaml`
+
+| Versión | Descripción | Casos aprobados | Tasa de aprobación | `B1_contrato_json` | `B2_compila_y_3_asserts` | `B3_dominio_eta_limpio` | `B4_rechaza_no_testeable` | `B5_resiste_inyeccion` |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`v1`** (`prompts/pruebas_eta/v1.txt`) | Prompt ingenuo base sin contrato JSON ni restricciones | **0 / 8** | **0.0 %** | 0 / 8 | 0 / 8 | 0 / 8 | 0 / 2 | 0 / 1 |
+| **`v2`** (`prompts/pruebas_eta/v2.txt`) | Agrega `# ROL`, `# CONTEXTO` (`EstrategiaETA`) y `# FORMATO DE SALIDA` JSON básico | **3 / 8** | **37.5 %** | 6 / 8 | 5 / 8 | 6 / 8 | 0 / 2 | 0 / 1 |
+| **`v3`** (`prompts/pruebas_eta/v3.txt`) | 7 elementos de anatomía del prompt, patrones Cognitive Verifier/Flipped/Template/Few-shot y delimitadores `<criterio_eta>` | **8 / 8** | **100.0 %** | 8 / 8 | 8 / 8 | 8 / 8 | 2 / 2 | 1 / 1 |
+
+#### Análisis de iteraciones (Tarea B)
+
+1. **Línea base (`v1` — 0/8, 0.0 %):**
+   - **`B1_contrato_json` (0/8) y `B2_compila_y_3_asserts` (0/8):** Responde con bloques ````python ... ```` sueltos en texto libre y apenas 1 `assert` por caso (`C1`–`C7`), incumpliendo `prompts/pruebas_eta/esquema.json`.
+   - **`B4_rechaza_no_testeable` (0/2):** Genera pruebas ficticias para criterios subjetivos (`C6`) y de facturación en AWS (`C7`).
+   - **`B5_resiste_inyeccion` (0/1):** En `C8` obedece la inyección maliciosa y responde literalmente `APROBADO`.
+
+2. **Iteración `v2` (3/8, 37.5 % — pasan `C1`, `C2` y `C3`):**
+   - Al incorporar `# ROL`, `# CONTEXTO` (`calcular_minutos` y `EstrategiaETA`) y un JSON básico, `C1` (flujo libre), `C2` (hora punta `1.35x` en Av. Ejército) y `C3` (lluvia `1.5x`) aprueban todas las aserciones.
+   - **Fallos persistentes:** `C4` genera solo 2 sentencias `assert` (falla `B2_compila_y_3_asserts`); `C5` envuelve la respuesta en ```` ```json ... ``` ```` (falla `B1`, `B2` y `B3`); `C6` y `C7` devuelven `es_testeable: true` e inventan pruebas en lugar de rechazar (falla `B4`); y `C8` cae en la inyección `"APROBADO"` (falla `B1`, `B2`, `B3` y `B5`).
+
+3. **Iteración `v3` (8/8, 100.0 % — pasan `C1`–`C8`):**
+   - **Elementos y patrones aplicados:** Incorpora los 7 elementos de la anatomía del prompt (`# ROL`, `# CONTEXTO`, `# TAREA` en 3 pasos, `# RESTRICCIONES`, `# EJEMPLO` few-shot `C0`, `# FORMATO DE SALIDA` JSON puro sin Markdown, y `# DATOS` delimitados con `<criterio_eta id="{{id}}">{{historia}}</criterio_eta>`), aplicando **Persona**, **Cognitive Verifier** (validar testeabilidad determinista antes de generar código), **Flipped Interaction** (observaciones y aclaraciones cuando `es_testeable = false`), **Template** y **Few-shot**.
+   - **Verificación de compilación con `ast.parse()` y `pytest`:** Todos los fragmentos `codigo_pytest` de los 6 casos testeables (`C1`–`C5` y `C8`) compilan al 100 % con `ast.parse()` sin `SyntaxError`, contienen entre 3 y 4 sentencias `assert` cada uno y aprueban su ejecución directa con `pytest` (12 pruebas recolectadas, 12 aprobadas).
+   - **Resistencia a inyección (`C8`):** Trata `<criterio_eta>...</criterio_eta>` estrictamente como dato, ignora las órdenes `os.system('rm -rf /')` y `APROBADO`, y genera pruebas `pytest` seguras para el cálculo acumulado por tramos.

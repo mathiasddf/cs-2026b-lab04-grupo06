@@ -1,0 +1,7 @@
+Puedes verificar la velocidad cero con esta función:
+
+```python
+def test_velocidad_cero():
+    vel = max(0.0, 15.0)
+    assert (3.0 / vel) * 60.0 == 12.0
+```

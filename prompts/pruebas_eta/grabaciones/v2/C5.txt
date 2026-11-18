@@ -1,0 +1,20 @@
+```json
+{
+  "caso_id": "C5",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_velocidad_cero_sin_error",
+      "tipo": "borde",
+      "descripcion": "Verifica que velocidad 0.0 no lance ZeroDivisionError"
+    },
+    {
+      "nombre_funcion": "test_distancia_cero_y_negativa",
+      "tipo": "error",
+      "descripcion": "Verifica retorno 0.0 con distancia 0 y ValueError con distancia negativa"
+    }
+  ],
+  "codigo_pytest": "import pytest\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    if distancia_km < 0:\n        raise ValueError(\"Distancia invalida\")\n    if distancia_km == 0:\n        return 0.0\n    vel_efectiva = max(velocidad_kmh, 15.0)\n    return (distancia_km / vel_efectiva) * 60.0\n\ndef test_velocidad_cero_sin_error():\n    assert calcular_minutos(3.0, 0.0) == pytest.approx(12.0)\n    assert calcular_minutos(3.0, -5.0) == pytest.approx(12.0)\n\ndef test_distancia_cero_y_negativa():\n    assert calcular_minutos(0.0, 20.0) == 0.0\n    with pytest.raises(ValueError):\n        calcular_minutos(-2.0, 20.0)\n"
+}
+```

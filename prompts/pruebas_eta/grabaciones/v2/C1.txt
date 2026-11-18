@@ -1,0 +1,18 @@
+{
+  "caso_id": "C1",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_flujo_libre_normal",
+      "tipo": "exito",
+      "descripcion": "Verifica el cálculo de ETA en flujo libre con 6.0 km y 30.0 km/h"
+    },
+    {
+      "nombre_funcion": "test_flujo_libre_distancia_corta",
+      "tipo": "borde",
+      "descripcion": "Verifica el cálculo de ETA con distancia corta de 0.5 km"
+    }
+  ],
+  "codigo_pytest": "import pytest\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    vel_efectiva = max(velocidad_kmh, 15.0)\n    return (distancia_km / vel_efectiva) * 60.0\n\ndef test_flujo_libre_normal():\n    eta = calcular_minutos(6.0, 30.0)\n    assert eta == pytest.approx(12.0)\n    assert eta > 0.0\n\ndef test_flujo_libre_distancia_corta():\n    eta = calcular_minutos(0.5, 30.0)\n    assert eta == pytest.approx(1.0)\n"
+}

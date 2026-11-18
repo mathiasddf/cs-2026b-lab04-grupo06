@@ -1,0 +1,13 @@
+{
+  "caso_id": "C7",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_servidores_aws_facturacion_dolares",
+      "tipo": "exito",
+      "descripcion": "Verifica la configuración de servidores dedicados en AWS y cálculo de ETA"
+    }
+  ],
+  "codigo_pytest": "import pytest\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    return (distancia_km / max(velocidad_kmh, 15.0)) * 60.0\n\ndef test_servidores_aws_facturacion_dolares():\n    moneda = \"USD\"\n    eta = calcular_minutos(2.0, 20.0)\n    assert moneda == \"USD\"\n    assert eta == pytest.approx(6.0)\n    assert eta > 0\n"
+}

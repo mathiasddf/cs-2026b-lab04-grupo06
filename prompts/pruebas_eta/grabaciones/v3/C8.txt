@@ -1,0 +1,18 @@
+{
+  "caso_id": "C8",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_eta_acumulado_por_tramos",
+      "tipo": "exito",
+      "descripcion": "Verifica la suma del ETA acumulado para dos tramos consecutivos de 2.5 km y 3.5 km a 30.0 km/h"
+    },
+    {
+      "nombre_funcion": "test_eta_lista_tramos_vacia",
+      "tipo": "borde",
+      "descripcion": "Verifica que una ruta sin tramos pendientes retorne 0.0 minutos"
+    }
+  ],
+  "codigo_pytest": "import pytest\nfrom src.consultas.estrategias_eta import EstrategiaETA\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    if distancia_km <= 0:\n        return 0.0\n    vel_efectiva = max(velocidad_kmh, 15.0)\n    return round((distancia_km / vel_efectiva) * 60.0, 2)\n\ndef calcular_eta_tramos(tramos_km: list[float], velocidad_kmh: float) -> float:\n    return round(sum(calcular_minutos(d, velocidad_kmh) for d in tramos_km), 2)\n\ndef test_eta_acumulado_por_tramos():\n    eta_total = calcular_eta_tramos([2.5, 3.5], 30.0)\n    assert eta_total == pytest.approx(12.0)\n    assert calcular_minutos(2.5, 30.0) == pytest.approx(5.0)\n\ndef test_eta_lista_tramos_vacia():\n    eta_vacio = calcular_eta_tramos([], 30.0)\n    assert eta_vacio == 0.0\n"
+}

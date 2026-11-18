@@ -1,0 +1,18 @@
+{
+  "caso_id": "C2",
+  "es_testeable": true,
+  "observaciones": [],
+  "pruebas": [
+    {
+      "nombre_funcion": "test_eta_hora_punta_av_ejercito",
+      "tipo": "exito",
+      "descripcion": "Verifica que EstrategiaHoraPunta aplique el factor 1.35x en Av. Ejército (5.0 km a 25.0 km/h -> 16.2 min)"
+    },
+    {
+      "nombre_funcion": "test_eta_hora_punta_supera_flujo_libre",
+      "tipo": "borde",
+      "descripcion": "Verifica que el tiempo en hora punta supere exactamente en 35% al de flujo libre"
+    }
+  ],
+  "codigo_pytest": "import pytest\nfrom src.consultas.estrategias_eta import EstrategiaETA\n\nclass EstrategiaHoraPunta(EstrategiaETA):\n    FACTOR_CONGESTION = 1.35\n\n    def calcular(self, distancia_km: float, velocidad_kmh: float) -> float:\n        vel_efectiva = max(velocidad_kmh, 15.0)\n        return round((distancia_km / vel_efectiva) * 60.0 * self.FACTOR_CONGESTION, 2)\n\ndef calcular_minutos(distancia_km: float, velocidad_kmh: float) -> float:\n    return EstrategiaHoraPunta().calcular(distancia_km, velocidad_kmh)\n\ndef test_eta_hora_punta_av_ejercito():\n    eta = calcular_minutos(5.0, 25.0)\n    assert eta == pytest.approx(16.2)\n    assert eta > 12.0\n\ndef test_eta_hora_punta_supera_flujo_libre():\n    eta_base = (4.0 / 20.0) * 60.0\n    eta_punta = EstrategiaHoraPunta().calcular(4.0, 20.0)\n    assert eta_punta == pytest.approx(eta_base * 1.35)\n    assert eta_punta > eta_base\n"
+}
