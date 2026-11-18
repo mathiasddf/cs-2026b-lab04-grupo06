@@ -2,6 +2,8 @@ description: "Evaluacion de criterios de aceptacion INVEST para RutaSIT Arequipa
 
 prompts:
   - "file://v1.txt"
+  - "file://v2.txt"
+  - "file://v3.txt"
 
 providers:
   - id: "file://../proveedor_grabado.py"
@@ -33,6 +35,8 @@ defaultTest:
     - type: javascript
       metric: A3_sin_implementacion
       value: |
+        // Corrección del evaluador (E3 paso 4): inspeccionar únicamente JSON.parse(output).escenarios
+        // para evitar falsos positivos sobre preguntas válidas al Product Owner (ej. H7).
         const prohibidas = ['postgresql', 'redis', 'react', 'django', 'endpoint', 'tabla', 'api de', 'base de datos', 'b-tree', 'websocket'];
         let texto = output;
         try {

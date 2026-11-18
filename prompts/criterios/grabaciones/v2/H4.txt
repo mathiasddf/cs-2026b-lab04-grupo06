@@ -1,0 +1,31 @@
+{
+  "historia_id": "H4",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Aviso accesible de demora en celular y pantalla de paradero",
+      "tipo": "exito",
+      "dado": [
+        "un bus de la ruta hacia Paucarpata presenta un retraso confirmado de 8 minutos",
+        "el pasajero tiene activadas las alertas en su celular y consulta el paradero"
+      ],
+      "cuando": "el sistema detecta la demora significativa de la unidad",
+      "entonces": [
+        "el pasajero recibe un aviso breve y compatible con lector de pantalla en su celular",
+        "la pantalla del paradero muestra el motivo breve de la demora en texto legible"
+      ]
+    },
+    {
+      "titulo": "Demora menor al umbral de notificación",
+      "tipo": "borde",
+      "dado": [
+        "un bus presenta una variación menor a 1 minuto respecto a su hora estimada"
+      ],
+      "cuando": "se recalcula el tiempo de llegada al paradero",
+      "entonces": [
+        "el sistema actualiza el tiempo mostrado sin generar avisos de demora innecesarios"
+      ]
+    }
+  ]
+}

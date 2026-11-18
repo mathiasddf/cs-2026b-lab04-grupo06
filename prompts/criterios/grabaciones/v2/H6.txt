@@ -1,0 +1,29 @@
+{
+  "historia_id": "H6",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Carga rápida de la aplicación para el usuario",
+      "tipo": "exito",
+      "dado": [
+        "el usuario abre la aplicación RutaSIT en Arequipa"
+      ],
+      "cuando": "navega por las pantallas principales de rutas y paraderos",
+      "entonces": [
+        "la aplicación responde de forma rápida, moderna, intuitiva y fácil de usar"
+      ]
+    },
+    {
+      "titulo": "Uso de la aplicación con conexión móvil inestable",
+      "tipo": "borde",
+      "dado": [
+        "el usuario se encuentra en una zona con señal móvil débil"
+      ],
+      "cuando": "abre la aplicación RutaSIT",
+      "entonces": [
+        "la interfaz se mantiene accesible y clara durante la navegación"
+      ]
+    }
+  ]
+}

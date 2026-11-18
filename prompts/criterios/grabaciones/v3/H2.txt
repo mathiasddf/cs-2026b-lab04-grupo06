@@ -1,0 +1,31 @@
+{
+  "historia_id": "H2",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Unificación en mapa de posiciones de Conecta y TransCayma",
+      "tipo": "exito",
+      "dado": [
+        "el operador de monitoreo del SIT supervisa el corredor de Av. Ejército y Cayma",
+        "unidades de Conecta y TransCayma reportan sus posiciones geográficas cada 10 segundos"
+      ],
+      "cuando": "el sistema recibe los reportes de ambas concesionarias",
+      "entonces": [
+        "el mapa de monitoreo muestra todas las unidades bajo una representación uniforme con ruta, velocidad y concesionaria"
+      ]
+    },
+    {
+      "titulo": "Descarte de reporte GPS con coordenadas fuera de rango o trama incompleta",
+      "tipo": "error",
+      "dado": [
+        "un dispositivo embarcado de TransCayma envía un reporte sin velocidad o con coordenadas fuera del territorio de Arequipa"
+      ],
+      "cuando": "el sistema procesa el reporte entrante",
+      "entonces": [
+        "el sistema rechaza el reporte inválido sin afectar las posiciones válidas en el mapa",
+        "el panel registra una alerta técnica de trama descartada para la unidad afectada"
+      ]
+    }
+  ]
+}

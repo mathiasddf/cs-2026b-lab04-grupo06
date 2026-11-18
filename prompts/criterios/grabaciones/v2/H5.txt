@@ -1,0 +1,32 @@
+```json
+{
+  "historia_id": "H5",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Consulta de historial diario propio de la concesionaria",
+      "tipo": "exito",
+      "dado": [
+        "el supervisor está autenticado como representante de Conecta",
+        "existen viajes completados en la jornada actual"
+      ],
+      "cuando": "consulta el historial diario de viajes y retrasos",
+      "entonces": [
+        "el sistema muestra únicamente los viajes y retrasos de las unidades de Conecta"
+      ]
+    },
+    {
+      "titulo": "Día sin viajes registrados para la concesionaria",
+      "tipo": "borde",
+      "dado": [
+        "el supervisor consulta una fecha sin operaciones registradas para su empresa"
+      ],
+      "cuando": "solicita el reporte diario",
+      "entonces": [
+        "el sistema muestra una lista vacía con el mensaje de que no existen viajes en la fecha consultada"
+      ]
+    }
+  ]
+}
+```

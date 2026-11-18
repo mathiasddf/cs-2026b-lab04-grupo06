@@ -1,0 +1,20 @@
+{
+  "historia_id": "H1",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Consulta de ubicación y ETA en paradero de Av. Ejército",
+      "tipo": "exito",
+      "dado": [
+        "el pasajero abre RutaSIT y selecciona el paradero Cayma en Av. Ejército",
+        "existen buses de Conecta en circulación enviando su ubicación"
+      ],
+      "cuando": "el pasajero consulta el mapa de su paradero",
+      "entonces": [
+        "el sistema muestra la ubicación de los buses cercanos en el mapa",
+        "el sistema presenta el tiempo estimado de llegada en minutos para cada unidad"
+      ]
+    }
+  ]
+}
