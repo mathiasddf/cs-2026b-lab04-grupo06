@@ -1,0 +1,32 @@
+{
+  "historia_id": "H1",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Consulta de ubicación y ETA en paradero de Av. Ejército",
+      "tipo": "exito",
+      "dado": [
+        "el pasajero selecciona el paradero Ovalo Quiñones en Av. Ejército, Cayma",
+        "existen buses de Conecta y TransCayma circulando con señal GPS activa hacia ese paradero"
+      ],
+      "cuando": "el pasajero consulta los buses próximos a su paradero",
+      "entonces": [
+        "el sistema muestra la ubicación actualizada de las unidades en el mapa de Arequipa",
+        "el sistema presenta el tiempo estimado de llegada en minutos para cada bus asignado"
+      ]
+    },
+    {
+      "titulo": "Bus con pérdida de señal GPS superior a 60 segundos",
+      "tipo": "borde",
+      "dado": [
+        "un bus de Conecta rumbo a Paucarpata deja de transmitir su posición por más de 60 segundos"
+      ],
+      "cuando": "el pasajero consulta el ETA en su paradero",
+      "entonces": [
+        "el sistema muestra la última ubicación conocida del bus con una advertencia de señal desactualizada",
+        "el ETA no se presenta como exacto mientras no se recupere la transmisión"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "historia_id": "H6",
+  "invest_ok": false,
+  "preguntas": [
+    "¿Qué flujo específico del pasajero u operador (por ejemplo, consulta de ETA en paradero o visualización del mapa en hora punta) requiere mejorar su tiempo de respuesta y cuál es el umbral máximo aceptable en segundos?",
+    "¿Qué criterios observables y medibles determinarán para el equipo de negocio que la interfaz es suficientemente clara e intuitiva para los pasajeros de Arequipa?"
+  ],
+  "escenarios": []
+}

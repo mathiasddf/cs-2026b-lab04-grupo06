@@ -1,0 +1,41 @@
+{
+  "historia_id": "H5",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Consulta del historial diario exclusivo de la propia concesionaria",
+      "tipo": "exito",
+      "dado": [
+        "el supervisor ha iniciado sesión con permisos exclusivos de la concesionaria Conecta",
+        "existen viajes y retrasos registrados en la jornada para Conecta y TransCayma en rutas de Cayma y Paucarpata"
+      ],
+      "cuando": "el supervisor consulta el historial diario de viajes y retrasos de una fecha operativa",
+      "entonces": [
+        "el sistema muestra únicamente los viajes, horarios y retrasos pertenecientes a las unidades de Conecta"
+      ]
+    },
+    {
+      "titulo": "Bloqueo al intentar consultar historial de otra concesionaria",
+      "tipo": "error",
+      "dado": [
+        "el supervisor autenticado pertenece a la concesionaria Conecta"
+      ],
+      "cuando": "intenta filtrar o solicitar los registros diarios de TransCayma",
+      "entonces": [
+        "el sistema deniega el acceso y no expone ningún registro ni viaje de TransCayma"
+      ]
+    },
+    {
+      "titulo": "Fecha consultada sin viajes registrados para la concesionaria",
+      "tipo": "borde",
+      "dado": [
+        "el supervisor de TransCayma selecciona una fecha sin operaciones registradas para su flota"
+      ],
+      "cuando": "solicita el historial diario de viajes y retrasos",
+      "entonces": [
+        "el sistema presenta un resumen vacío indicando que no hubo viajes registrados en esa fecha"
+      ]
+    }
+  ]
+}
