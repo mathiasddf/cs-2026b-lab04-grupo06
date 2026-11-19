@@ -1,133 +1,164 @@
 #!/usr/bin/env python3
-"""Compuerta de calidad para evaluaciones de prompts con promptfoo.
+"""Compuerta de calidad (Quality Gate) para evaluaciones de prompts con promptfoo.
 
-Verifica que los resultados de promptfoo cumplan el umbral mínimo de pase
-para cada suite (criterios de aceptacion INVEST y generacion de pruebas ETA).
+Verifica que la versión objetivo (producción) de cada suite alcance el 100 %
+de casos aprobados (8/8), aun cuando las versiones históricas (v1, v2) fallen
+intencionalmente en la comparativa.
 
 Uso:
     python prompts/quality_gate.py
-
-Archivos de entrada (generados por promptfoo eval --output):
-    /tmp/eval_criterios.json
-    /tmp/eval_pruebas_eta.json
+    python prompts/quality_gate.py --criterios /ruta/criterios.json --pruebas-eta /ruta/pruebas_eta.json
 
 Codigo de salida:
-    0  -> todas las suites pasan la compuerta
-    1  -> al menos una suite falla o falta un archivo
+    0  -> todas las suites pasan la compuerta en su versión objetivo
+    1  -> al menos una suite falla o falta un archivo de evaluación
 """
 
+from __future__ import annotations
+
+import argparse
 import json
 import sys
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# Configuracion de suites
-# ---------------------------------------------------------------------------
 SUITES = [
     {
-        "nombre": "criterios",
-        "archivo": Path("/tmp/eval_criterios.json"),
-        "umbral_pass_rate": 0.75,  # 75 % de asserts deben pasar
+        "clave": "criterios",
+        "nombre": "Tarea A - Criterios INVEST",
+        "archivo_defecto": Path("/tmp/eval_criterios.json"),
+        "version_esperada": "v3.1.txt",
+        "total_esperado": 8,
     },
     {
-        "nombre": "pruebas_eta",
-        "archivo": Path("/tmp/eval_pruebas_eta.json"),
-        "umbral_pass_rate": 0.75,
+        "clave": "pruebas_eta",
+        "nombre": "Tarea B - Pruebas Pytest ETA",
+        "archivo_defecto": Path("/tmp/eval_pruebas_eta.json"),
+        "version_esperada": "v3.txt",
+        "total_esperado": 8,
     },
 ]
 
 
-def _leer_resultados(ruta: Path) -> dict:
-    if not ruta.exists():
-        print(f"[ERROR] No se encontro el archivo de evaluacion {ruta}", file=sys.stderr)
-        sys.exit(1)
-    with ruta.open(encoding="utf-8") as fh:
-        return json.load(fh)
+def _es_version_objetivo(label: str, version_esperada: str) -> bool:
+    if version_esperada == "v3.1.txt":
+        return "v3.1.txt" in label
+    if version_esperada == "v3.txt":
+        return "v3.txt" in label and "v3.1" not in label
+    return version_esperada in label
 
 
-def _calcular_pass_rate(datos: dict) -> tuple[int, int, float]:
-    """Devuelve (pasados, total, tasa) a partir del JSON de promptfoo."""
-    resultados_raw = datos.get("results")
+def verificar_evaluacion(
+    ruta_archivo: Path,
+    nombre_tarea: str,
+    version_esperada: str,
+    total_esperado: int = 8,
+) -> bool:
+    """Evalúa un archivo JSON de promptfoo y valida la versión objetivo al 100 %."""
+    if not ruta_archivo.exists():
+        print(
+            f"[ERROR] No se encontro el archivo de evaluacion {ruta_archivo}",
+            file=sys.stderr,
+        )
+        return False
 
-    # Formato promptfoo >= 0.73: datos["results"] es dict con "stats"
-    if isinstance(resultados_raw, dict):
-        stats = resultados_raw.get("stats") or {}
-        if stats:
-            passed = int(stats.get("successes", 0))
-            failed = int(stats.get("failures", 0))
-            total = passed + failed
-            rate = passed / total if total > 0 else 0.0
-            return passed, total, rate
+    with ruta_archivo.open("r", encoding="utf-8") as fh:
+        data = json.load(fh)
 
-        # Puede haber una lista dentro del dict bajo "results"
-        lista = resultados_raw.get("results") or []
-        if isinstance(lista, list) and lista:
-            passed = sum(1 for r in lista if r.get("success") or r.get("passed"))
-            total = len(lista)
-            rate = passed / total if total > 0 else 0.0
-            return passed, total, rate
+    prompts = data.get("results", {}).get("prompts", [])
+    print("\n" + "=" * 60)
+    print(f" Resumen de Evaluacion: {nombre_tarea}")
+    print("=" * 60)
 
-    # Formato alternativo: datos["results"] es lista plana
-    if isinstance(resultados_raw, list):
-        passed = sum(1 for r in resultados_raw if r.get("success") or r.get("passed"))
-        total = len(resultados_raw)
-        rate = passed / total if total > 0 else 0.0
-        return passed, total, rate
+    if not prompts:
+        print(
+            f"[ERROR] El archivo {ruta_archivo} no contiene resultados de prompts.",
+            file=sys.stderr,
+        )
+        return False
 
-    # Formato con tabla de resultados individuales en datos["table"]["body"]
-    filas = (datos.get("table") or {}).get("body") or []
-    if filas:
-        passed = 0
-        total = 0
-        for fila in filas:
-            for celda in fila:
-                if isinstance(celda, dict) and "pass" in celda:
-                    total += 1
-                    if celda["pass"]:
-                        passed += 1
-        rate = passed / total if total > 0 else 0.0
-        return passed, total, rate
+    mejor_version_encontrada = False
+    mejor_version_ok = False
 
-    return 0, 0, 0.0
+    for p in prompts:
+        label = p.get("label") or p.get("display") or ""
+        first_line = label.split("\n")[0][:75]
+        metrics = p.get("metrics", {})
+        passed = int(metrics.get("testPassCount", 0))
+        failed = int(metrics.get("testFailCount", 0))
+        errors = int(metrics.get("testErrorCount", 0))
+        total = passed + failed + errors
+        pct = (passed / total) * 100 if total > 0 else 0.0
+        print(f" * {first_line}: {passed}/{total} ({pct:.1f} %)")
+
+        if _es_version_objetivo(label, version_esperada):
+            mejor_version_encontrada = True
+            if passed == total_esperado and failed == 0 and errors == 0:
+                print(
+                    f"   --> GATE APROBADO: {version_esperada} alcanzo "
+                    f"{passed}/{total_esperado} (100.0 %)"
+                )
+                mejor_version_ok = True
+            else:
+                print(
+                    f"   --> GATE FALLIDO: {version_esperada} obtuvo "
+                    f"{passed}/{total_esperado} (fallaron {failed}, errores {errors})",
+                    file=sys.stderr,
+                )
+
+    if not mejor_version_encontrada:
+        print(
+            f"[ERROR] No se encontro la version objetivo '{version_esperada}' en {ruta_archivo}",
+            file=sys.stderr,
+        )
+        return False
+
+    return mejor_version_ok
 
 
-def main() -> int:
-    hay_fallo = False
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Compuerta de calidad (Quality Gate) para evaluaciones promptfoo."
+    )
+    parser.add_argument(
+        "--criterios",
+        type=Path,
+        default=SUITES[0]["archivo_defecto"],
+        help="Ruta al JSON de resultados de Tarea A (criterios INVEST).",
+    )
+    parser.add_argument(
+        "--pruebas-eta",
+        dest="pruebas_eta",
+        type=Path,
+        default=SUITES[1]["archivo_defecto"],
+        help="Ruta al JSON de resultados de Tarea B (pruebas pytest ETA).",
+    )
+    args = parser.parse_args(argv)
 
-    for suite in SUITES:
-        nombre = suite["nombre"]
-        archivo = suite["archivo"]
-        umbral = suite["umbral_pass_rate"]
+    rutas = {
+        "criterios": args.criterios,
+        "pruebas_eta": args.pruebas_eta,
+    }
 
-        print(f"\n{'=' * 60}")
-        print(f"Suite: {nombre}")
-        print(f"Archivo: {archivo}")
+    resultados = [
+        verificar_evaluacion(
+            ruta_archivo=rutas[suite["clave"]],
+            nombre_tarea=suite["nombre"],
+            version_esperada=suite["version_esperada"],
+            total_esperado=suite["total_esperado"],
+        )
+        for suite in SUITES
+    ]
 
-        datos = _leer_resultados(archivo)
-        pasados, total, tasa = _calcular_pass_rate(datos)
-
-        print(f"Resultados: {pasados}/{total} asserts pasaron ({tasa:.1%})")
-        print(f"Umbral requerido: {umbral:.0%}")
-
-        if total == 0:
-            print(f"[ERROR] No se encontraron resultados en {archivo}", file=sys.stderr)
-            hay_fallo = True
-        elif tasa < umbral:
-            print(
-                f"[FALLO] Suite '{nombre}' no supera la compuerta "
-                f"({tasa:.1%} < {umbral:.0%})",
-                file=sys.stderr,
-            )
-            hay_fallo = True
-        else:
-            print(f"[OK] Suite '{nombre}' supera la compuerta ({tasa:.1%} >= {umbral:.0%})")
-
-    print(f"\n{'=' * 60}")
-    if hay_fallo:
-        print("[COMPUERTA FALLIDA] Al menos una suite no cumple el umbral.", file=sys.stderr)
+    if not all(resultados):
+        print(
+            "\n[FALLO] La compuerta de calidad de prompts no se cumplio.",
+            file=sys.stderr,
+        )
         return 1
 
-    print("[COMPUERTA SUPERADA] Todas las suites cumplen el umbral de calidad.")
+    print(
+        "\n[EXITO] Compuerta de calidad superada al 100% para Tarea A (v3.1) y Tarea B (v3)."
+    )
     return 0
 
 
