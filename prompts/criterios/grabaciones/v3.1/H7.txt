@@ -1,0 +1,9 @@
+{
+  "historia_id": "H7",
+  "invest_ok": false,
+  "preguntas": [
+    "¿Qué necesidad del operador o pasajero se ve afectada por el rendimiento actual de la base de datos?",
+    "¿Cuál es el resultado de negocio o atributo de calidad observable (por ejemplo, tiempo máximo de actualización del ETA en hora punta) que permitirá validar si la mejora cumplió su objetivo?"
+  ],
+  "escenarios": []
+}

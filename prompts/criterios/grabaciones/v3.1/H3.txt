@@ -1,0 +1,31 @@
+{
+  "historia_id": "H3",
+  "invest_ok": true,
+  "preguntas": [],
+  "escenarios": [
+    {
+      "titulo": "Alerta al inspector por desvío del corredor autorizado o detención mayor a 60 segundos",
+      "tipo": "exito",
+      "dado": [
+        "el inspector de ruta monitorea los corredores hacia Paucarpata y Av. Ejército",
+        "un bus de Conecta inicia un viaje programado dentro de su corredor autorizado"
+      ],
+      "cuando": "el bus sale del corredor autorizado o permanece detenido más de 60 segundos fuera de paradero",
+      "entonces": [
+        "el inspector recibe una alerta automática con el identificador del bus, el tipo de incidencia y su ubicación actual"
+      ]
+    },
+    {
+      "titulo": "Detención breve en semáforo menor a 60 segundos sin falsa alerta",
+      "tipo": "borde",
+      "dado": [
+        "un bus de TransCayma circula por Av. Ejército en hora punta",
+        "la unidad se detiene en un semáforo durante 45 segundos"
+      ],
+      "cuando": "el bus reanuda su avance antes de superar los 60 segundos de detención",
+      "entonces": [
+        "el sistema no genera alerta de detención prolongada para el inspector"
+      ]
+    }
+  ]
+}
