@@ -33,9 +33,25 @@ jobs:
           node-version: "20"
 
       - name: Ejecutar evaluaciones promptfoo (offline con proveedor grabado)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-          npx --yes promptfoo@latest eval --no-cache -c prompts/criterios/promptfooconfig.yaml -o /tmp/eval_criterios.json || true
-          npx --yes promptfoo@latest eval --no-cache -c prompts/pruebas_eta/promptfooconfig.yaml -o /tmp/eval_pruebas_eta.json || true
+          set -euo pipefail
+          echo "=== Python path check ==="
+          python -c "import sys; print('sys.path:', sys.path[:3])"
+          python -c "from src.consultas.ia import ProveedorLLM; print('ProveedorLLM OK:', ProveedorLLM)"
+          echo "=== Ejecutando promptfoo criterios ==="
+          npx --yes promptfoo@0.126.0 eval --no-cache \
+            -c prompts/criterios/promptfooconfig.yaml \
+            -o /tmp/eval_criterios.json \
+            && echo "Criterios OK" || echo "Criterios terminó con error (intencionado para v1/v2)"
+          echo "=== Ejecutando promptfoo pruebas_eta ==="
+          npx --yes promptfoo@0.126.0 eval --no-cache \
+            -c prompts/pruebas_eta/promptfooconfig.yaml \
+            -o /tmp/eval_pruebas_eta.json \
+            && echo "Pruebas ETA OK" || echo "Pruebas ETA terminó con error (intencionado para v1/v2)"
+          echo "=== Verificar archivos generados ==="
+          ls -lh /tmp/eval_criterios.json /tmp/eval_pruebas_eta.json || echo "ADVERTENCIA: algún archivo faltante"
 
       - name: Compuerta de calidad (Quality Gate) para prompts
         run: |

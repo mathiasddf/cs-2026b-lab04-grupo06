@@ -13,7 +13,14 @@ REPO_ROOT = PROMPTS_DIR.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.consultas.ia import ProveedorLLM  # noqa: E402
+# Import lazy: solo necesario para ProveedorGrabadoLLM (pytest).
+# call_api (usado por promptfoo) no requiere ProveedorLLM en tiempo de carga.
+try:
+    from src.consultas.ia import ProveedorLLM  # noqa: E402
+    _PROVEEDOR_LLM_DISPONIBLE = True
+except ImportError:  # pragma: no cover
+    ProveedorLLM = object  # type: ignore[assignment,misc]
+    _PROVEEDOR_LLM_DISPONIBLE = False
 
 
 def _normalizar_texto(texto: str) -> str:
