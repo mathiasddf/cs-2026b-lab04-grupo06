@@ -86,3 +86,20 @@ class FabricaProveedoresGPS:
         if operador not in self._creadores:
             raise ValueError(f"Operador GPS no soportado: {operador}")
         return ConReintentosGPS(self._creadores[operador]())
+
+
+class DatosGPSIncompletosError(ValueError):
+    """Excepción de dominio cuando una trama GPS llega vacía o con campos obligatorios faltantes."""
+    pass
+
+
+def normalizar_trama_gps(trama: dict | None) -> LecturaGPS:
+    """Convierte una trama cruda de telemetría GPS (Conecta/TransCayma) en LecturaGPS."""
+    return LecturaGPS(
+        latitud=float(trama["lat"]),
+        longitud=float(trama["lon"]),
+        velocidad_kmh=float(trama["velocidad"]),
+        antiguedad_seg=int(trama.get("antiguedad_seg", 0)),
+        en_corredor=bool(trama.get("en_corredor", True)),
+    )
+
