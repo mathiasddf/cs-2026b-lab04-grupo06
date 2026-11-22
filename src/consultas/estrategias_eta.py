@@ -54,6 +54,8 @@ def calcular_eta_a_paradero(
     estrategia: EstrategiaETA | None = None,
 ) -> float:
     """Calcula el tiempo estimado de llegada (en minutos) hacia un paradero."""
-    estrategia_activa = estrategia or ETAFlujoLibre()
     distancia_restante_km = posicion_paradero_km - posicion_bus_km
+    if distancia_restante_km <= 0:
+        return 0.0
+    estrategia_activa = estrategia or ETAFlujoLibre()
     return round(estrategia_activa.calcular(distancia_restante_km, velocidad_kmh), 2)
