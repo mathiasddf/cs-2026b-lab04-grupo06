@@ -45,3 +45,15 @@ class FabricaEstrategiasETA:
         if modo not in self._estrategias:
             raise ValueError(f"Algoritmo de ETA no soportado: {modo}")
         return self._estrategias[modo]()
+
+
+def calcular_eta_a_paradero(
+    posicion_bus_km: float,
+    posicion_paradero_km: float,
+    velocidad_kmh: float,
+    estrategia: EstrategiaETA | None = None,
+) -> float:
+    """Calcula el tiempo estimado de llegada (en minutos) hacia un paradero."""
+    estrategia_activa = estrategia or ETAFlujoLibre()
+    distancia_restante_km = posicion_paradero_km - posicion_bus_km
+    return round(estrategia_activa.calcular(distancia_restante_km, velocidad_kmh), 2)
