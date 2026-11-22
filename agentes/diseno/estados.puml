@@ -1,0 +1,85 @@
+@startuml estados_agente_rutasit
+title Máquina de Estados del Agente ReAct — RutaSIT Arequipa (nucleo.py)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam ArrowColor #334155
+skinparam ArrowFontColor #1E293B
+skinparam ArrowFontSize 11
+
+skinparam state {
+  BackgroundColor #EFF6FF
+  BorderColor #1D4ED8
+  FontColor #0F172A
+  FontStyle bold
+  AttributeFontColor #334155
+  AttributeFontStyle normal
+  BackgroundColor<<error>> #FEF2F2
+  BorderColor<<error>> #DC2626
+  BackgroundColor<<humano>> #FFFBEB
+  BorderColor<<humano>> #D97706
+  BackgroundColor<<final_ok>> #ECFDF5
+  BorderColor<<final_ok>> #059669
+  BackgroundColor<<final_limite>> #FDF2F8
+  BorderColor<<final_limite>> #BE185D
+}
+
+state "DECIDIENDO" as Decidiendo
+Decidiendo : modelo.decidir(historial)
+
+state "VALIDANDO_CONTRATO" as ValidandoContrato
+ValidandoContrato : validar_decision(d, conocidas)
+
+state "CONTRATO_INVALIDO" as ContratoInvalido <<error>>
+ContratoInvalido : Registra ERROR DE CONTRATO
+
+state "EVALUANDO_POLITICA" as EvaluandoPolitica
+EvaluandoPolitica : politica.evaluar(accion, args, paso)
+
+state "ESPERANDO_APROBACION" as EsperandoAprobacion <<humano>>
+EsperandoAprobacion : Humano en el circuito (aprobar_edicion)
+
+state "EJECUTANDO" as Ejecutando
+Ejecutando : herramienta(**args) en sandbox
+
+state "OBSERVANDO" as Observando
+Observando : Registra resultado o error
+
+state "BLOQUEADO" as Bloqueado <<error>>
+Bloqueado : Registra BLOQUEADO POR LA POLÍTICA
+
+state "LIMITE_ALCANZADO" as LimiteAlcanzado <<final_limite>>
+LimiteAlcanzado : Presupuesto max_pasos agotado
+
+state "FINALIZADO" as Finalizado <<final_ok>>
+Finalizado : Respuesta final validada
+
+[*] --> Decidiendo : objetivo recibido (INICIO)
+
+Decidiendo --> ValidandoContrato : decisión JSON
+
+ValidandoContrato --> ContratoInvalido : [inválida] / ERROR DE CONTRATO
+ContratoInvalido --> Decidiendo : observación de error
+
+ValidandoContrato --> Finalizado : [es "final"]
+ValidandoContrato --> EvaluandoPolitica : [es "accion"]
+
+EvaluandoPolitica --> LimiteAlcanzado : [paso > max_pasos]
+EvaluandoPolitica --> Bloqueado : [herramienta/comando/ruta denegada]
+EvaluandoPolitica --> EsperandoAprobacion : [editar_archivo y aprobar_edicion activa]
+EvaluandoPolitica --> Ejecutando : [permitida]
+
+EsperandoAprobacion --> Bloqueado : [humano rechaza ("n")]
+EsperandoAprobacion --> Ejecutando : [humano aprueba ("s")]
+
+Bloqueado --> Decidiendo : observación BLOQUEADO
+
+Ejecutando --> Observando : resultado o error
+Observando --> Decidiendo : se agrega al historial
+
+Finalizado --> [*] : respuesta final
+LimiteAlcanzado --> [*] : sin respuesta
+
+@enduml
