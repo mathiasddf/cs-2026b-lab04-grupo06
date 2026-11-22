@@ -93,13 +93,38 @@ class DatosGPSIncompletosError(ValueError):
     pass
 
 
+def _extraer_float_obligatorio(trama: dict, clave: str) -> float:
+    valor = trama.get(clave)
+    if valor is None or isinstance(valor, bool):
+        raise DatosGPSIncompletosError(f"Campo GPS obligatorio faltante o nulo: '{clave}'")
+    try:
+        return float(valor)
+    except (TypeError, ValueError) as exc:
+        raise DatosGPSIncompletosError(f"Campo GPS '{clave}' no es numérico: {valor!r}") from exc
+
+
+def _extraer_antiguedad(trama: dict) -> int:
+    valor = trama.get("antiguedad_seg")
+    if valor is None:
+        return 0
+    if isinstance(valor, bool):
+        raise DatosGPSIncompletosError(f"Campo 'antiguedad_seg' inválido: {valor!r}")
+    try:
+        return int(valor)
+    except (TypeError, ValueError) as exc:
+        raise DatosGPSIncompletosError(f"Campo 'antiguedad_seg' inválido: {valor!r}") from exc
+
+
 def normalizar_trama_gps(trama: dict | None) -> LecturaGPS:
     """Convierte una trama cruda de telemetría GPS (Conecta/TransCayma) en LecturaGPS."""
+    if not isinstance(trama, dict) or not trama:
+        raise DatosGPSIncompletosError("La trama GPS está vacía o no es un diccionario.")
+    en_corredor_raw = trama.get("en_corredor")
     return LecturaGPS(
-        latitud=float(trama["lat"]),
-        longitud=float(trama["lon"]),
-        velocidad_kmh=float(trama["velocidad"]),
-        antiguedad_seg=int(trama.get("antiguedad_seg", 0)),
-        en_corredor=bool(trama.get("en_corredor", True)),
+        latitud=_extraer_float_obligatorio(trama, "lat"),
+        longitud=_extraer_float_obligatorio(trama, "lon"),
+        velocidad_kmh=_extraer_float_obligatorio(trama, "velocidad"),
+        antiguedad_seg=_extraer_antiguedad(trama),
+        en_corredor=True if en_corredor_raw is None else bool(en_corredor_raw),
     )
 

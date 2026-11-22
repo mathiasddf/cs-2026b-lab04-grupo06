@@ -171,3 +171,45 @@ def test_maquina_estados_limite_alcanzado(tmp_path):
     ]
     assert agente.estado == EstadoAgente.LIMITE_ALCANZADO
     assert resultado == "(sin respuesta final)"
+
+
+def test_mapa_repo_extrae_firmas_ast_y_respeta_sandbox():
+    raiz_repo = pathlib.Path(__file__).parents[2]
+    h = Herramientas(str(raiz_repo))
+    mapa = h.mapa_repo("src/consultas")
+    assert "src/consultas/proveedores_gps.py" in mapa
+    assert "def normalizar_trama_gps(" in mapa
+    assert "class DatosGPSIncompletosError" in mapa
+    assert "src/consultas/estrategias_eta.py" in mapa
+    assert "def calcular_eta_a_paradero(" in mapa
+
+    error_inexistente = h.mapa_repo("src/no_existe_carpeta")
+    assert error_inexistente.startswith("ERROR:")
+
+    with pytest.raises(PermissionError):
+        h.mapa_repo("..")
+
+
+def test_memoria_notas_anotar_y_leer_notas(tmp_path):
+    h = Herramientas(str(tmp_path))
+    assert h.leer_notas() == "Sin notas registradas aún en notas.md."
+
+    assert h.anotar("") == "ERROR: el texto de la nota no puede estar vacío"
+    assert h.anotar("   ") == "ERROR: el texto de la nota no puede estar vacío"
+    assert not (tmp_path / "notas.md").exists()
+
+    assert h.anotar("Hipótesis: normalizar_trama_gps no valida trama None ni claves faltantes") == "OK: nota guardada en notas.md"
+    assert h.anotar("Archivos revisados: issues/ISSUE-03.md, src/consultas/proveedores_gps.py") == "OK: nota guardada en notas.md"
+
+    contenido = h.leer_notas()
+    assert "- Hipótesis: normalizar_trama_gps no valida trama None ni claves faltantes" in contenido
+    assert "- Archivos revisados: issues/ISSUE-03.md, src/consultas/proveedores_gps.py" in contenido
+
+
+def test_catalogo_y_politica_incluyen_herramientas_e4(tmp_path):
+    catalogo = Herramientas(str(tmp_path)).catalogo()
+    for nombre in ("mapa_repo", "anotar", "leer_notas"):
+        assert nombre in catalogo
+        assert isinstance(catalogo[nombre], str) and len(catalogo[nombre]) > 20
+        assert nombre in Politica().herramientas_permitidas
+
