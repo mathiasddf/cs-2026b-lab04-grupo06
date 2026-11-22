@@ -13,7 +13,7 @@ sys.path.insert(0, str(DIR_AGENTES))
 from agente.herramientas import Herramientas
 from agente.modelos import ModeloGrabado, ModeloInteractivo
 from agente.nucleo import Agente
-from agente.politica import Politica
+from agente.politica import Politica, pedir_aprobacion_edicion
 
 SANDBOX_BASE = DIR_AGENTES / ".sandbox"
 SANDBOX_ORIGINAL = SANDBOX_BASE / "trabajo_original"
@@ -76,6 +76,7 @@ def ejecutar_multiagente(
     carpeta_trazas: Optional[pathlib.Path] = None,
     sandbox: Optional[pathlib.Path] = None,
     aprobar_edicion: Optional[Callable[[dict], bool]] = None,
+    auto_aprobar: bool = False,
 ) -> dict:
     """Ejecuta el patrón Planificador -> bucle Actor-Crítico (Ejecutor <-> Revisor)."""
     slug = issue.lower().replace("-", "")
@@ -112,6 +113,8 @@ def ejecutar_multiagente(
     pol_ejecutor = Politica(max_pasos=12)
     if aprobar_edicion is not None:
         pol_ejecutor.aprobar_edicion = aprobar_edicion
+    elif not auto_aprobar:
+        pol_ejecutor.aprobar_edicion = pedir_aprobacion_edicion
 
     pol_revisor = Politica(
         herramientas_permitidas={
@@ -206,6 +209,12 @@ def main() -> None:
     parser.add_argument("--issue", default="ISSUE-02", help="Identificador del issue (ej. ISSUE-02).")
     parser.add_argument("--max-rondas", type=int, default=2, help="Máximo de rondas actor-crítico.")
     parser.add_argument("--prefijo", default=None, help="Prefijo de los archivos de trayectoria.")
+    parser.add_argument(
+        "--auto-aprobar",
+        action="store_true",
+        default=False,
+        help="Omite la confirmación humana interactiva de editar_archivo (solo para CI/pruebas automatizadas).",
+    )
     args = parser.parse_args()
 
     prefijo = args.prefijo or args.issue.lower().replace("-", "")
@@ -214,6 +223,7 @@ def main() -> None:
         modo=args.modo,
         max_rondas=args.max_rondas,
         prefijo_trayectoria=prefijo,
+        auto_aprobar=args.auto_aprobar,
     )
 
     print(f"\n=== RESULTADO MULTIAGENTE ({res['issue']}, {res['rondas']} ronda(s)) ===")
