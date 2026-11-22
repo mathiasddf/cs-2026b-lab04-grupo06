@@ -14,7 +14,10 @@ def validar_decision(d, herramientas_conocidas) -> tuple[bool, str]:
     if ("final" in d) == ("accion" in d):
         return False, "debe incluir 'accion' o 'final', pero no ambos"
     if "final" in d:
-        return (True, "") if isinstance(d["final"], str) else (False, "'final' debe ser texto")
+        if not isinstance(d["final"], str) or not d["final"].strip():
+            return False, "'final' debe ser texto no vacío"
+        extra = set(d) - {"pensamiento", "final"}
+        return (False, f"campos no permitidos: {sorted(extra)}") if extra else (True, "")
     if d["accion"] not in herramientas_conocidas:
         return False, f"herramienta desconocida: {d['accion']!r}"
     if not isinstance(d.get("args", {}), dict):
