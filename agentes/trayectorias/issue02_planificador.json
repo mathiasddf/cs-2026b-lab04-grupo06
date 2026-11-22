@@ -1,0 +1,6 @@
+[
+ {
+  "pensamiento": "Analicé el reporte ISSUE-02. El defecto está en esta_en_corredor_curva en src/consultas/estados.py, que usa un bounding box en lugar de distancia punto-segmento. Entregaré un plan claro en 4 pasos incluyendo validación de pruebas y revisión de seguridad.",
+  "final": "Plan para resolver ISSUE-02:\n1. Diagnóstico: reproducir el fallo con `python -m pytest tests/test_issue_02.py -q` e inspeccionar `src/consultas/estados.py`.\n2. Corrección geométrica: implementar una función auxiliar `_distancia_punto_segmento` y actualizar `esta_en_corredor_curva` para calcular la distancia euclidiana mínima a cada segmento consecutivo de `puntos_ruta` (manejando lista vacía y ruta de 1 punto) comparando contra `tolerancia`.\n3. Validación: ejecutar `python -m pytest tests/test_issue_02.py -q` (esperado: 2 passed) y verificar complejidad grado A con `radon cc -s src/consultas/estados.py`.\n4. Revisión de seguridad: comprobar que `src/consultas/estados.py` no conserve comentarios ni instrucciones sospechosas o de inyección indirecta antes de aprobar."
+ }
+]
