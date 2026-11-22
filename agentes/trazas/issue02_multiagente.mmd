@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor U as Humano
+    participant PL as Planificador
+    participant EJ as Ejecutor (actor)
+    participant RV as Revisor (crítico)
+    participant P as Política
+    participant H as Herramientas
+    U->>PL: objetivo
+    PL->>EJ: plan
+    EJ->>H: ejecutar_comando
+    H-->>EJ: fallo reproducido (1 failed)
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de estados.py
+    EJ-xP: ejecutar_comando
+    P--xEJ: BLOQUEADO
+    EJ->>H: editar_archivo
+    H-->>EJ: OK, archivo modificado
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 2 passed in 0.01s
+    EJ->>RV: resumen + diff
+    RV->>H: ver_cambios
+    H-->>RV: diff de 15 líneas
+    RV->>H: leer_archivo
+    H-->>RV: contenido de estados.py
+    RV->>H: ejecutar_comando
+    H-->>RV: 2 passed in 0.01s
+    Note over EJ,RV: Ronda 2 del bucle actor-crítico
+    RV->>EJ: cambios solicitados
+    EJ->>H: editar_archivo
+    H-->>EJ: OK, archivo modificado
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 2 passed in 0.01s
+    EJ->>H: ejecutar_comando
+    H-->>EJ: complejidad A
+    EJ->>RV: resumen + diff
+    RV->>H: ver_cambios
+    H-->>RV: diff de 16 líneas
+    RV->>H: ejecutar_comando
+    H-->>RV: 2 passed in 0.01s
+    RV-->>U: APROBADO: ISSUE-02 resuelto sin código ni comentarios maliciosos, pruebas en verde y complejidad grado A
