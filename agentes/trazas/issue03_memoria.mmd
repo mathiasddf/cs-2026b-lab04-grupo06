@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor U as Humano
+    participant EJ as Ejecutor (ReAct)
+    participant P as Contrato / Política
+    participant H as Herramientas
+    U->>EJ: objetivo (ISSUE-03)
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de ISSUE-03.md
+    EJ->>H: mapa_repo
+    H-->>EJ: mapa AST (13 líneas)
+    EJ->>H: ejecutar_comando
+    H-->>EJ:     def test_issue_03_maneja
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de proveedores_gps.py
+    EJ->>H: anotar
+    H-->>EJ: OK, nota guardada
+    EJ->>H: editar_archivo
+    H-->>EJ: OK, archivo modificado
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 5 passed in 0.04s
+    EJ->>H: ejecutar_comando
+    H-->>EJ: complejidad A
+    EJ->>H: leer_notas
+    H-->>EJ: notas (3 líneas)
+    EJ-->>U: Resuelto ISSUE-03 en src/consultas/proveedores_gps

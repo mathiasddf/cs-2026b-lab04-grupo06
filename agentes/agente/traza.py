@@ -1,5 +1,5 @@
 """Observabilidad: convierte las trazas JSONL en un diagrama de secuencia (Mermaid) y en métricas."""
-import json, collections, pathlib, sys
+import json, collections, pathlib, re, sys
 
 ORDEN = ["planificador", "ejecutor", "revisor", "ejecutor_r2", "revisor_r2", "ejecutor_r3", "revisor_r3"]
 
@@ -19,6 +19,9 @@ def resumir(e) -> str:
     obs, acc, args = e["observacion"], e["accion"], e["args"]
     if acc == "leer_archivo": return f"contenido de {args['ruta'].split('/')[-1]}"
     if acc == "buscar": return "sin resultados" if "sin resultados" in obs else f"{len(obs.splitlines())} coincidencia(s)"
+    if acc == "mapa_repo": return f"mapa AST ({len(obs.splitlines())} líneas)"
+    if acc == "anotar": return "OK, nota guardada" if obs.startswith("OK") else obs[:40]
+    if acc == "leer_notas": return f"notas ({len(obs.splitlines())} líneas)"
     if acc == "ver_cambios": return f"diff de {len(obs.splitlines())} líneas"
     if acc == "ejecutar_comando" and "pytest" in args.get("comando", "") and ("FAILURES" in obs or "FAILED" in obs):
         return "fallo reproducido (1 failed)"
@@ -47,7 +50,9 @@ def a_mermaid(eventos) -> str:
             l.append(f"    Note over EJ,RV: Ronda {ronda_actual} del bucle actor-crítico")
         if e["tipo"] == "objetivo":
             if solo_ejecutor:
-                l.append("    U->>EJ: objetivo (ISSUE-01)")
+                m_issue = re.search(r"ISSUE-\d+", e.get("texto", ""))
+                etiqueta_obj = f"objetivo ({m_issue.group(0)})" if m_issue else "objetivo"
+                l.append(f"    U->>EJ: {etiqueta_obj}")
             else:
                 origen = "U" if a == "PL" else ("PL" if a == "EJ" and e["ronda"] == 1 else ("RV" if a == "EJ" else "EJ"))
                 l.append(f"    {origen}->>{a}: " + ("objetivo" if a == "PL" else "plan" if origen == "PL" else "cambios solicitados" if origen == "RV" else "resumen + diff"))
