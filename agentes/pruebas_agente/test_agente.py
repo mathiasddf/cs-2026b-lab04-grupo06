@@ -2,7 +2,7 @@
 import json, sys, pathlib, pytest
 sys.path.insert(0, str(pathlib.Path(__file__).parents[1]))
 from agente.contrato import validar_decision
-from agente.politica import Politica
+from agente.politica import Politica, pedir_aprobacion_edicion
 from agente.herramientas import Herramientas
 from agente.modelos import ModeloGrabado
 from agente.nucleo import Agente, EstadoAgente
@@ -212,4 +212,106 @@ def test_catalogo_y_politica_incluyen_herramientas_e4(tmp_path):
         assert nombre in catalogo
         assert isinstance(catalogo[nombre], str) and len(catalogo[nombre]) > 20
         assert nombre in Politica().herramientas_permitidas
+
+
+@pytest.mark.parametrize("entrada", ["s", " S "])
+def test_pedir_aprobacion_edicion_acepta_s(entrada):
+    salidas = []
+    prompts = []
+    args = {
+        "ruta": "src/consultas/estados.py",
+        "antes": "return True",
+        "despues": "return dist_min <= tolerancia",
+    }
+
+    def fake_input(prompt):
+        prompts.append(prompt)
+        return entrada
+
+    assert pedir_aprobacion_edicion(args, input_fn=fake_input, print_fn=salidas.append) is True
+    assert prompts == ["¿Aprobar esta edición? [s/n]: "]
+    texto_mostrado = "\n".join(salidas)
+    assert "src/consultas/estados.py" in texto_mostrado
+    assert "-return True" in texto_mostrado
+    assert "+return dist_min <= tolerancia" in texto_mostrado
+
+
+@pytest.mark.parametrize("entrada", ["n", " N "])
+def test_pedir_aprobacion_edicion_rechaza_n(entrada):
+    salidas = []
+    args = {"ruta": "src/consultas/estados.py", "antes": "a = 1", "despues": "a = 2"}
+    assert pedir_aprobacion_edicion(args, input_fn=lambda _: entrada, print_fn=salidas.append) is False
+
+
+@pytest.mark.parametrize("respuesta_final, esperado", [("s", True), ("n", False)])
+def test_pedir_aprobacion_edicion_reintenta_entradas_invalidas(respuesta_final, esperado):
+    entradas = iter(["", "quizas", "si", "1", "tal vez", "yes", respuesta_final])
+    salidas = []
+    llamadas = 0
+
+    def fake_input(_):
+        nonlocal llamadas
+        llamadas += 1
+        return next(entradas)
+
+    args = {"ruta": "src/consultas/estados.py", "antes": "x = 0", "despues": "x = 1"}
+    resultado = pedir_aprobacion_edicion(args, input_fn=fake_input, print_fn=salidas.append)
+    assert resultado is esperado
+    assert llamadas == 7
+    avisos = [s for s in salidas if "Entrada inválida" in s]
+    assert len(avisos) == 6
+
+
+def test_hitl_integracion_agente_aprueba_tras_entrada_invalida(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    archivo = repo / "estados.py"
+    archivo.write_text("estado = 'OLD'\n", encoding="utf-8")
+
+    entradas = iter(["quizas", " S "])
+    politica = Politica(max_pasos=5)
+    politica.aprobar_edicion = lambda args: pedir_aprobacion_edicion(
+        args, input_fn=lambda _: next(entradas), print_fn=lambda _: None
+    )
+    decisiones = [
+        {"pensamiento": "actualizo estado", "accion": "editar_archivo", "args": {"ruta": "estados.py", "antes": "estado = 'OLD'", "despues": "estado = 'NEW'"}},
+        {"pensamiento": "listo", "final": "Edición aprobada por humano"},
+    ]
+    agente, resultado, _ = _ejecutar_agente_grabado(tmp_path, decisiones, politica=politica)
+    estados = [e["estado"] for e in agente.eventos]
+    assert estados == [
+        EstadoAgente.INICIO,
+        EstadoAgente.ESPERANDO_APROBACION,
+        EstadoAgente.OBSERVANDO,
+        EstadoAgente.FINALIZADO,
+    ]
+    assert archivo.read_text(encoding="utf-8") == "estado = 'NEW'\n"
+    assert resultado == "Edición aprobada por humano"
+
+
+def test_hitl_integracion_agente_rechaza_sin_modificar_archivo(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    archivo = repo / "estados.py"
+    archivo.write_text("estado = 'OLD'\n", encoding="utf-8")
+
+    entradas = iter(["", "1", " N "])
+    politica = Politica(max_pasos=5)
+    politica.aprobar_edicion = lambda args: pedir_aprobacion_edicion(
+        args, input_fn=lambda _: next(entradas), print_fn=lambda _: None
+    )
+    decisiones = [
+        {"pensamiento": "actualizo estado", "accion": "editar_archivo", "args": {"ruta": "estados.py", "antes": "estado = 'OLD'", "despues": "estado = 'NEW'"}},
+        {"pensamiento": "rechazado", "final": "Edición rechazada por humano"},
+    ]
+    agente, resultado, _ = _ejecutar_agente_grabado(tmp_path, decisiones, politica=politica)
+    estados = [e["estado"] for e in agente.eventos]
+    assert estados == [
+        EstadoAgente.INICIO,
+        EstadoAgente.ESPERANDO_APROBACION,
+        EstadoAgente.BLOQUEADO,
+        EstadoAgente.FINALIZADO,
+    ]
+    assert archivo.read_text(encoding="utf-8") == "estado = 'OLD'\n"
+    assert resultado == "Edición rechazada por humano"
 

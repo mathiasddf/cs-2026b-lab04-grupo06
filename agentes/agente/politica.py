@@ -1,6 +1,33 @@
 """Guardrails: qué puede hacer el agente, cuántas veces y con qué aprobación."""
+import difflib
 import re
 from dataclasses import dataclass, field
+
+
+def pedir_aprobacion_edicion(args: dict, input_fn=input, print_fn=print) -> bool:
+    """Humano en el circuito (HITL): muestra un diff legible y exige confirmación estricta [s/n]."""
+    ruta = args.get("ruta", "(desconocida)")
+    antes = args.get("antes", "")
+    despues = args.get("despues", "")
+    diff = list(
+        difflib.unified_diff(
+            antes.splitlines(),
+            despues.splitlines(),
+            fromfile=f"a/{ruta}",
+            tofile=f"b/{ruta}",
+            lineterm="",
+        )
+    )
+    print_fn(f"\n=== SOLICITUD DE APROBACIÓN HUMANA (editar_archivo) ===")
+    print_fn(f"Archivo: {ruta}")
+    print_fn("\n".join(diff) if diff else "(sin diferencias visibles)")
+    while True:
+        respuesta = input_fn("¿Aprobar esta edición? [s/n]: ").strip().lower()
+        if respuesta == "s":
+            return True
+        if respuesta == "n":
+            return False
+        print_fn("Entrada inválida: responde únicamente 's' para aprobar o 'n' para rechazar.")
 
 
 @dataclass
