@@ -1,0 +1,64 @@
+[
+ {
+  "pensamiento": "Primero debo leer el reporte issues/ISSUE-01.md para entender el bug reportado y el contrato esperado.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "issues/ISSUE-01.md"
+  }
+ },
+ {
+  "pensamiento": "Reproduciré el fallo ejecutando pytest sobre tests/test_issue_01.py para observar el error exacto.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest tests/test_issue_01.py -q"
+  }
+ },
+ {
+  "pensamiento": "El fallo se reprodujo (assert -4.0 == 0.0). Buscaré la definición de calcular_eta_a_paradero en el código fuente.",
+  "accion": "buscar",
+  "args": {
+   "patron": "def calcular_eta_a_paradero"
+  }
+ },
+ {
+  "pensamiento": "La función está en src/consultas/estrategias_eta.py línea 50. Leeré el archivo completo para inspeccionar su implementación.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/consultas/estrategias_eta.py"
+  }
+ },
+ {
+  "pensamiento": "Ya identifiqué la causa raíz: distancia_restante_km puede ser negativa o cero cuando el bus alcanzó o superó el paradero. Aplicaré el parche en estrategias_eta.py.",
+  "accion": "aplicar_parche",
+  "args": {
+   "ruta": "src/consultas/estrategias_eta.py"
+  }
+ },
+ {
+  "pensamiento": "Corrijo el error de contrato: la herramienta válida para modificar archivos es editar_archivo. Agregaré la guarda para retornar 0.0 cuando distancia_restante_km <= 0 (es decir, posicion_bus_km >= posicion_paradero_km).",
+  "accion": "editar_archivo",
+  "args": {
+   "ruta": "src/consultas/estrategias_eta.py",
+   "antes": "    estrategia_activa = estrategia or ETAFlujoLibre()\n    distancia_restante_km = posicion_paradero_km - posicion_bus_km\n    return round(estrategia_activa.calcular(distancia_restante_km, velocidad_kmh), 2)",
+   "despues": "    distancia_restante_km = posicion_paradero_km - posicion_bus_km\n    if distancia_restante_km <= 0:\n        return 0.0\n    estrategia_activa = estrategia or ETAFlujoLibre()\n    return round(estrategia_activa.calcular(distancia_restante_km, velocidad_kmh), 2)"
+  }
+ },
+ {
+  "pensamiento": "El archivo fue modificado correctamente. Ejecutaré ahora pytest sobre tests/test_issue_01.py para confirmar que ambas pruebas pasan en verde.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest tests/test_issue_01.py -q"
+  }
+ },
+ {
+  "pensamiento": "Las pruebas de ISSUE-01 pasaron (2/2). Verificaré ahora la complejidad ciclomática del módulo modificado con radon cc.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "radon cc -s src/consultas/estrategias_eta.py"
+  }
+ },
+ {
+  "pensamiento": "Las pruebas de ISSUE-01 pasaron (2/2) y radon cc confirma complejidad grado A (3) en calcular_eta_a_paradero. Emito la respuesta final.",
+  "final": "Resuelto ISSUE-01 en src/consultas/estrategias_eta.py: calcular_eta_a_paradero ahora retorna 0.0 cuando distancia_restante_km <= 0 (posicion_bus_km >= posicion_paradero_km), evitando ETAs negativos. Verificado con pytest tests/test_issue_01.py (2 passed) y radon cc (grado A, complejidad 3)."
+ }
+]
